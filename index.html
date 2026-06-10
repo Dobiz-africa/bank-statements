@@ -312,7 +312,7 @@
       </div>
       <span class="drop-label" id="dropLabel">Upload your statement</span>
       <span class="drop-sub">CSV or PDF &nbsp;·&nbsp; Any bank</span>
-      <span class="drop-btn">Choose file</span>
+      <span class="drop-btn" id="chooseBtn">Choose file</span>
     </div>
     <div class="file-bar" id="fileBar">
       <span class="file-tag" id="fileTag">PDF</span>
@@ -385,6 +385,7 @@
   ["dragleave","drop"].forEach(e => uploader.addEventListener(e, ev => { ev.preventDefault(); uploader.classList.remove("over"); }));
   uploader.addEventListener("drop", e => pick(e.dataTransfer.files[0]));
   fileRemove.addEventListener("click", e => { e.preventDefault(); reset(); });
+  $("chooseBtn").addEventListener("click", e => { e.preventDefault(); fileInput.click(); });
 
   function pick(f) {
     if (!f) return;
