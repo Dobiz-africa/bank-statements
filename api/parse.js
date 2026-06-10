@@ -144,16 +144,36 @@ export default async function handler(req, res) {
 }
 
 // --- PDF text extraction with optional password unlock ---
-// Uses pdfjs-dist (pure JS, works in Vercel's Node runtime).
+// Primary: unpdf (built for serverless, no worker setup needed).
+// Fallback: pdfjs-dist with an explicit worker path.
 async function extractPdfText(base64, password) {
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const data = Buffer.from(base64, "base64");
+
+  // Try unpdf first — it handles Node/serverless cleanly.
+  try {
+    const { extractText, getDocumentProxy } = await import("unpdf");
+    const pdf = await getDocumentProxy(new Uint8Array(data), {
+      password: password || undefined,
+    });
+    const { text } = await extractText(pdf, { mergePages: true });
+    if (text && text.trim().length >= 20) return text;
+  } catch (e) {
+    // fall through to pdfjs
+    console.error("unpdf failed, trying pdfjs:", e.message);
+  }
+
+  // Fallback: pdfjs with explicit worker path.
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const { createRequire } = await import("module");
+  const require = createRequire(import.meta.url);
+  pdfjsLib.GlobalWorkerOptions.workerSrc = require.resolve(
+    "pdfjs-dist/legacy/build/pdf.worker.mjs"
+  );
 
   const loadingTask = pdfjsLib.getDocument({
     data: new Uint8Array(data),
     password: password || undefined,
     useSystemFonts: true,
-    disableWorker: true,
     isEvalSupported: false,
   });
 
