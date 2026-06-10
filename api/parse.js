@@ -101,11 +101,27 @@ export default async function handler(req, res) {
       textForModel = content;
     } else if (fileType === "pdf") {
       // PDF path — extract text (unlocking with password if supplied), then send text.
-      const pdfText = await extractPdfText(content, password);
+      let pdfText;
+      try {
+        pdfText = await extractPdfText(content, password);
+      } catch (e) {
+        const msg = String(e.message || e).toLowerCase();
+        // pdfjs/unpdf signal a password issue via these messages.
+        if (msg.includes("password")) {
+          if (!password) {
+            // No password was given but the PDF needs one → tell the page to ask.
+            return res.status(401).json({ needsPassword: true });
+          }
+          // A password was given but it was wrong.
+          return res.status(401).json({ needsPassword: true, wrongPassword: true });
+        }
+        throw e;
+      }
+
       if (!pdfText || pdfText.trim().length < 20) {
         return res.status(422).json({
           error:
-            "Could not read text from this PDF. It may be a scanned image. Ask the client to download the PDF directly from their banking app, or upload the CSV instead.",
+            "Couldn't read any text from this PDF — it may be a scanned image rather than a digital statement. Please upload the statement downloaded directly from the banking app, or a CSV.",
         });
       }
       textForModel = pdfText;
@@ -144,45 +160,16 @@ export default async function handler(req, res) {
 }
 
 // --- PDF text extraction with optional password unlock ---
-// Primary: unpdf (built for serverless, no worker setup needed).
-// Fallback: pdfjs-dist with an explicit worker path.
+// Uses unpdf — built for serverless/Node, no worker setup, handles
+// both locked and unlocked PDFs. Throws an error containing "password"
+// when the PDF is encrypted and the password is missing or wrong.
 async function extractPdfText(base64, password) {
+  const { extractText, getDocumentProxy } = await import("unpdf");
   const data = Buffer.from(base64, "base64");
 
-  // Try unpdf first — it handles Node/serverless cleanly.
-  try {
-    const { extractText, getDocumentProxy } = await import("unpdf");
-    const pdf = await getDocumentProxy(new Uint8Array(data), {
-      password: password || undefined,
-    });
-    const { text } = await extractText(pdf, { mergePages: true });
-    if (text && text.trim().length >= 20) return text;
-  } catch (e) {
-    // fall through to pdfjs
-    console.error("unpdf failed, trying pdfjs:", e.message);
-  }
-
-  // Fallback: pdfjs with explicit worker path.
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const { createRequire } = await import("module");
-  const require = createRequire(import.meta.url);
-  pdfjsLib.GlobalWorkerOptions.workerSrc = require.resolve(
-    "pdfjs-dist/legacy/build/pdf.worker.mjs"
-  );
-
-  const loadingTask = pdfjsLib.getDocument({
-    data: new Uint8Array(data),
+  const pdf = await getDocumentProxy(new Uint8Array(data), {
     password: password || undefined,
-    useSystemFonts: true,
-    isEvalSupported: false,
   });
-
-  const pdf = await loadingTask.promise;
-  let out = "";
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const tc = await page.getTextContent();
-    out += tc.items.map((it) => it.str).join(" ") + "\n";
-  }
-  return out;
+  const { text } = await extractText(pdf, { mergePages: true });
+  return text;
 }
