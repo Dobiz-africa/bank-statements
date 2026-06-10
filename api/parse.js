@@ -53,42 +53,6 @@ Rules:
 - Use the statement's own currency.
 `;
 
-// Contract for when user manually supplies their income details.
-// We still want the same output shape so the frontend never has to branch.
-const MANUAL_CONTRACT = `
-The user has manually provided their income details because the AI could not detect a regular salary from their bank statement.
-Use ONLY the information they have provided — do not infer or invent anything else.
-Return ONLY valid JSON (no markdown, no backticks) in EXACTLY this shape:
-
-{
-  "bank": "string or 'unknown'",
-  "account_holder": "string or null",
-  "statement_period": { "from": null, "to": null },
-
-  "salary_detected": false,
-  "income_manually_confirmed": true,
-  "income_type": "salary | irregular_business | grant | mixed | unknown",
-  "income": {
-    "pay_dates": [],
-    "frequency": "monthly | weekly | fortnightly | irregular | unknown",
-    "typical_day_of_month": number or null,
-    "average_amount": number or null,
-    "currency": "ZAR"
-  },
-
-  "existing_debit_orders": [],
-
-  "recommended_debit_date": {
-    "day_of_month": number or null,
-    "reason": "string — based on the pay day the user provided, explain why this debit date is best"
-  },
-
-  "affordability_note": "string — note that income was self-reported and could not be verified from the statement",
-  "confidence": "low",
-  "notes": "Income details were manually confirmed by the account holder."
-}
-`;
-
 async function callMistral(messages) {
   const res = await fetch("https://api.mistral.ai/v1/chat/completions", {
     method: "POST",
@@ -97,7 +61,7 @@ async function callMistral(messages) {
       Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "mistral-small-latest",
+      model: "mistral-small-latest", // cheap + good enough for extraction; swap to mistral-large-latest if needed
       messages,
       temperature: 0,
       response_format: { type: "json_object" },
@@ -121,52 +85,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = req.body || {};
-
-    // ── Manual confirmation path ────────────────────────────────────────────
-    // When salary_detected was false and the user fills in their own details,
-    // the frontend POSTs { manualConfirmation: true, manualData: { ... } }
-    if (body.manualConfirmation) {
-      const { manualData, bank, accountHolder } = body;
-      if (!manualData) {
-        return res.status(400).json({ error: "manualData is required for manual confirmation." });
-      }
-
-      const messages = [
-        {
-          role: "system",
-          content: "You are a financial analysis assistant. " + MANUAL_CONTRACT,
-        },
-        {
-          role: "user",
-          content: [
-            `Bank: ${bank || "unknown"}`,
-            `Account holder: ${accountHolder || "unknown"}`,
-            `Employment type: ${manualData.employmentType}`,
-            `Pay frequency: ${manualData.frequency}`,
-            `Pay day (day of month or description): ${manualData.payDay}`,
-            `Approximate monthly income: ${manualData.amount} ZAR`,
-          ].join("\n"),
-        },
-      ];
-
-      const raw = await callMistral(messages);
-      let parsed;
-      try {
-        parsed = JSON.parse(raw);
-      } catch {
-        parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
-      }
-
-      // Preserve any bank/holder info we already have from the AI pass
-      if (bank) parsed.bank = bank;
-      if (accountHolder) parsed.account_holder = accountHolder;
-
-      return res.status(200).json({ ok: true, result: parsed });
-    }
-
-    // ── Normal statement parse path ─────────────────────────────────────────
-    const { fileType, fileName, content, password } = body;
+    // Body: { fileType: "csv" | "pdf", fileName, content }
+    //   csv -> content is plain text
+    //   pdf -> content is base64 (already unlocked client-side OR we unlock here)
+    const { fileType, fileName, content, password } = req.body || {};
 
     if (!fileType || !content) {
       return res.status(400).json({ error: "Send fileType ('csv' or 'pdf') and content." });
@@ -175,17 +97,22 @@ export default async function handler(req, res) {
     let textForModel = "";
 
     if (fileType === "csv") {
+      // CSV path — cleanest. Just hand the rows to the model to normalise.
       textForModel = content;
     } else if (fileType === "pdf") {
+      // PDF path — extract text (unlocking with password if supplied), then send text.
       let pdfText;
       try {
         pdfText = await extractPdfText(content, password);
       } catch (e) {
         const msg = String(e.message || e).toLowerCase();
+        // pdfjs/unpdf signal a password issue via these messages.
         if (msg.includes("password")) {
           if (!password) {
+            // No password was given but the PDF needs one → tell the page to ask.
             return res.status(401).json({ needsPassword: true });
           }
+          // A password was given but it was wrong.
           return res.status(401).json({ needsPassword: true, wrongPassword: true });
         }
         throw e;
@@ -221,6 +148,7 @@ export default async function handler(req, res) {
     try {
       parsed = JSON.parse(raw);
     } catch {
+      // Last-ditch: strip any stray fences and retry
       parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
     }
 
@@ -232,6 +160,9 @@ export default async function handler(req, res) {
 }
 
 // --- PDF text extraction with optional password unlock ---
+// Uses unpdf — built for serverless/Node, no worker setup, handles
+// both locked and unlocked PDFs. Throws an error containing "password"
+// when the PDF is encrypted and the password is missing or wrong.
 async function extractPdfText(base64, password) {
   const { extractText, getDocumentProxy } = await import("unpdf");
   const data = Buffer.from(base64, "base64");
