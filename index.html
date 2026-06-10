@@ -6,241 +6,324 @@
 <title>Statement Reader</title>
 <style>
   :root{
-    --ink:#1a1c1e;        /* near-black ink */
-    --paper:#f3efe6;      /* warm ledger paper */
-    --paper-edge:#e7e1d3;
-    --amber:#c2683b;      /* terracotta-amber accent, used sparingly */
-    --amber-soft:#e8d9c4;
-    --green:#3f6b4f;      /* reliable / good */
-    --rule:#cdc5b4;       /* hairline */
-    --muted:#6b6458;
+    --bg:#eef1f5;
+    --surface:#ffffff;
+    --line:#d8dee7;
+    --ink:#16202e;
+    --muted:#5d6b7d;
+    --faint:#8a96a6;
+    --blue:#1f5fd6;
+    --blue-soft:#e7eefb;
+    --good:#137a52;
+    --good-soft:#e2f3ec;
+    --warn:#9a5b00;
+    --warn-soft:#fbf0dd;
+    --shadow:0 1px 2px rgba(16,32,46,.06),0 8px 24px rgba(16,32,46,.06);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
-    background:var(--paper);
-    color:var(--ink);
-    font-family:"Iowan Old Style",Georgia,serif;
-    line-height:1.5;
-    padding:32px 20px 80px;
+    background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased;
+    padding:40px 20px 80px;
   }
-  .wrap{max-width:760px;margin:0 auto}
+  .wrap{max-width:720px;margin:0 auto}
 
-  /* header / hero */
-  .eyebrow{
-    font-family:ui-monospace,"SF Mono",Menlo,monospace;
-    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-    color:var(--muted);margin-bottom:10px;
-  }
-  h1{
-    font-size:38px;line-height:1.05;font-weight:600;letter-spacing:-.01em;
-    margin-bottom:8px;
-  }
-  .lede{color:var(--muted);font-size:16px;max-width:48ch;margin-bottom:28px}
+  header{margin-bottom:28px}
+  .kicker{font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--blue);text-transform:uppercase;margin-bottom:8px}
+  h1{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+  .sub{color:var(--muted);font-size:16px;max-width:52ch}
 
-  /* upload card */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
   .drop{
-    border:1.5px dashed var(--rule);
-    background:rgba(255,255,255,.45);
-    padding:28px;border-radius:4px;text-align:center;
-    transition:border-color .15s,background .15s;cursor:pointer;
+    padding:34px 28px;text-align:center;cursor:pointer;border-radius:14px;
+    border:2px dashed var(--line);transition:border-color .15s,background .15s;
   }
-  .drop:hover,.drop.over{border-color:var(--amber);background:rgba(255,255,255,.7)}
-  .drop strong{display:block;font-size:17px;margin-bottom:4px}
-  .drop span{font-family:ui-monospace,monospace;font-size:12px;color:var(--muted)}
+  .drop:hover,.drop.over{border-color:var(--blue);background:var(--blue-soft)}
+  .drop .ico{width:40px;height:40px;margin:0 auto 12px;color:var(--blue)}
+  .drop strong{display:block;font-size:17px;font-weight:600;margin-bottom:4px}
+  .drop .hint{font-size:13.5px;color:var(--faint)}
   input[type=file]{display:none}
 
-  .pw{
-    margin-top:14px;display:none;align-items:center;gap:8px;justify-content:center;
-    font-family:ui-monospace,monospace;font-size:12px;color:var(--muted)
-  }
-  .pw.show{display:flex}
-  .pw input{
-    font-family:ui-monospace,monospace;font-size:13px;padding:6px 8px;
-    border:1px solid var(--rule);border-radius:3px;background:#fff;width:180px
-  }
+  .chosen{display:none;align-items:center;gap:12px;padding:16px 20px;border-top:1px solid var(--line)}
+  .chosen.show{display:flex}
+  .chosen .badge{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:3px 8px;border-radius:5px;background:var(--blue-soft);color:var(--blue)}
+  .chosen .fname{flex:1;font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chosen button{background:none;border:none;color:var(--faint);cursor:pointer;font-size:13px;text-decoration:underline}
 
   .go{
-    margin-top:18px;width:100%;padding:13px;border:none;border-radius:3px;
-    background:var(--ink);color:var(--paper);font-size:15px;cursor:pointer;
-    font-family:inherit;letter-spacing:.01em;
+    margin-top:16px;width:100%;padding:15px;border:none;border-radius:11px;
+    background:var(--blue);color:#fff;font-size:15.5px;font-weight:600;cursor:pointer;
+    transition:opacity .15s,transform .05s;
   }
-  .go:disabled{opacity:.4;cursor:default}
+  .go:hover{opacity:.93}
+  .go:active{transform:translateY(1px)}
+  .go:disabled{background:#aeb8c5;cursor:default}
 
-  /* status */
-  .status{margin-top:18px;font-family:ui-monospace,monospace;font-size:13px;color:var(--muted);min-height:18px}
-  .status.err{color:var(--amber)}
+  .status{margin-top:14px;font-size:14px;color:var(--muted);min-height:20px;text-align:center}
+  .status.err{color:var(--warn)}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
-  /* results: the two headline outputs are the hero */
-  .results{margin-top:36px;display:none}
-  .results.show{display:block}
-  .twin{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
-  @media(max-width:560px){.twin{grid-template-columns:1fr}}
-  .panel{background:var(--paper);padding:22px}
-  .panel .tag{
-    font-family:ui-monospace,monospace;font-size:10.5px;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--muted);margin-bottom:12px
-  }
-  .panel .big{font-size:30px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
-  .panel .sub{margin-top:8px;font-size:14px;color:var(--muted)}
-  .panel.accent .big{color:var(--amber)}
+  .results{margin-top:28px;display:none}
+  .results.show{display:block;animation:rise .3s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-  .meta{margin-top:1px;background:var(--rule);border:1px solid var(--rule);border-top:none;border-radius:0 0 4px 4px;padding:16px 22px;display:flex;flex-wrap:wrap;gap:18px}
-  .meta div{font-size:13px}
-  .meta .k{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .verdicts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:560px){.verdicts{grid-template-columns:1fr}}
+  .verdict{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
+  .verdict .label{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+  .verdict .dot{width:8px;height:8px;border-radius:50%}
+  .verdict.income .dot{background:var(--good)}
+  .verdict.debit .dot{background:var(--blue)}
+  .verdict .value{font-size:26px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+  .verdict .note{margin-top:9px;font-size:14px;color:var(--muted);line-height:1.45}
+  .verdict .pill{display:inline-block;margin-top:12px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px}
+  .pill.good{background:var(--good-soft);color:var(--good)}
+  .pill.warn{background:var(--warn-soft);color:var(--warn)}
 
-  details{margin-top:22px;border-top:1px solid var(--rule);padding-top:14px}
-  summary{font-family:ui-monospace,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer}
-  pre{margin-top:12px;background:#fff;border:1px solid var(--rule);border-radius:3px;padding:16px;overflow:auto;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.55;color:var(--ink)}
+  .detail{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .detail h2{font-size:13px;font-weight:600;color:var(--muted);padding:16px 20px 0}
+  .rows{padding:8px 20px 16px}
+  .row{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .row:last-child{border-bottom:none}
+  .row .k{color:var(--faint)}
+  .row .v{font-weight:600;text-align:right}
 
-  .foot{margin-top:40px;font-family:ui-monospace,monospace;font-size:11px;color:var(--muted);text-align:center;letter-spacing:.04em}
+  details.raw{margin-top:16px}
+  details.raw summary{cursor:pointer;font-size:13px;color:var(--faint);padding:6px 2px}
+  details.raw pre{margin-top:8px;background:#0f1722;color:#cdd7e3;border-radius:11px;padding:16px;overflow:auto;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(16,32,46,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--surface);border-radius:16px;padding:26px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(16,32,46,.3)}
+  .modal h3{font-size:18px;font-weight:700;margin-bottom:6px}
+  .modal p{font-size:14px;color:var(--muted);margin-bottom:16px}
+  .modal input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;margin-bottom:8px}
+  .modal input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+  .modal .mwarn{font-size:13px;color:var(--warn);min-height:18px;margin-bottom:10px}
+  .modal-actions{display:flex;gap:10px}
+  .modal-actions button{flex:1;padding:11px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+  .modal-actions .primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+  footer{margin-top:32px;text-align:center;font-size:12.5px;color:var(--faint)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="eyebrow">Onboarding · statement intake</div>
-  <h1>Statement Reader</h1>
-  <p class="lede">Upload a customer's bank statement. The reader pulls out when they get paid and the safest day to collect a debit order — same result for any bank, CSV or PDF.</p>
+  <header>
+    <div class="kicker">Customer onboarding</div>
+    <h1>Statement Reader</h1>
+    <p class="sub">Upload a customer's bank statement to see when their income arrives and the safest day to collect a debit order. Works with any bank, as a CSV or PDF.</p>
+  </header>
 
-  <label class="drop" id="drop">
-    <strong id="dropTitle">Drop a statement here, or click to choose</strong>
-    <span id="dropHint">CSV preferred · PDF accepted</span>
-    <input type="file" id="file" accept=".csv,.pdf" />
-  </label>
-
-  <div class="pw" id="pwRow">
-    <span>PDF locked — enter password</span>
-    <input type="text" id="pw" placeholder="statement password" autocomplete="off" />
+  <div class="card">
+    <label class="drop" id="drop">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L8 8m4-4l4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      <strong id="dropTitle">Choose a statement, or drop it here</strong>
+      <span class="hint">CSV or PDF · up to ~15 MB</span>
+      <input type="file" id="file" accept=".csv,.pdf" />
+    </label>
+    <div class="chosen" id="chosen">
+      <span class="badge" id="fbadge">PDF</span>
+      <span class="fname" id="fname"></span>
+      <button id="clear">Remove</button>
+    </div>
   </div>
 
   <button class="go" id="go" disabled>Read statement</button>
   <div class="status" id="status"></div>
 
   <div class="results" id="results">
-    <div class="twin">
-      <div class="panel">
-        <div class="tag">When income arrives</div>
-        <div class="big" id="oSalary">—</div>
-        <div class="sub" id="oSalarySub"></div>
+    <div class="verdicts">
+      <div class="verdict income">
+        <div class="label"><span class="dot"></span> When income arrives</div>
+        <div class="value" id="oIncome">—</div>
+        <div class="note" id="oIncomeNote"></div>
+        <span class="pill" id="oIncomePill" style="display:none"></span>
       </div>
-      <div class="panel accent">
-        <div class="tag">Best debit-order day</div>
-        <div class="big" id="oDebit">—</div>
-        <div class="sub" id="oDebitSub"></div>
+      <div class="verdict debit">
+        <div class="label"><span class="dot"></span> Best day to collect</div>
+        <div class="value" id="oDebit">—</div>
+        <div class="note" id="oDebitNote"></div>
       </div>
     </div>
-    <div class="meta">
-      <div><div class="k">Bank</div><span id="mBank">—</span></div>
-      <div><div class="k">Income type</div><span id="mType">—</span></div>
-      <div><div class="k">Frequency</div><span id="mFreq">—</span></div>
-      <div><div class="k">Confidence</div><span id="mConf">—</span></div>
+
+    <div class="detail">
+      <h2>Summary</h2>
+      <div class="rows">
+        <div class="row"><span class="k">Bank</span><span class="v" id="dBank">—</span></div>
+        <div class="row"><span class="k">Account holder</span><span class="v" id="dHolder">—</span></div>
+        <div class="row"><span class="k">Statement period</span><span class="v" id="dPeriod">—</span></div>
+        <div class="row"><span class="k">Income type</span><span class="v" id="dType">—</span></div>
+        <div class="row"><span class="k">Pay frequency</span><span class="v" id="dFreq">—</span></div>
+        <div class="row"><span class="k">Average amount</span><span class="v" id="dAvg">—</span></div>
+        <div class="row"><span class="k">Affordability</span><span class="v" id="dAfford">—</span></div>
+        <div class="row"><span class="k">Reading confidence</span><span class="v" id="dConf">—</span></div>
+      </div>
     </div>
-    <details>
-      <summary>Full data (for the next team)</summary>
+
+    <details class="raw">
+      <summary>View full data</summary>
       <pre id="json"></pre>
     </details>
   </div>
 
-  <div class="foot">Mistral · keys stay server-side</div>
+  <footer>Statements are read securely and not stored.</footer>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3>This statement is password-protected</h3>
+    <p>Enter the password the bank set on this PDF to open it.</p>
+    <input type="text" id="modalPw" placeholder="Statement password" autocomplete="off" />
+    <div class="mwarn" id="modalWarn"></div>
+    <div class="modal-actions">
+      <button id="modalCancel">Cancel</button>
+      <button class="primary" id="modalUnlock">Unlock &amp; read</button>
+    </div>
+  </div>
 </div>
 
 <script>
-  const fileInput = document.getElementById("file");
-  const drop = document.getElementById("drop");
-  const dropTitle = document.getElementById("dropTitle");
-  const dropHint = document.getElementById("dropHint");
-  const go = document.getElementById("go");
-  const statusEl = document.getElementById("status");
-  const results = document.getElementById("results");
-  const pwRow = document.getElementById("pwRow");
-  const pwInput = document.getElementById("pw");
+  const $ = id => document.getElementById(id);
+  const drop=$("drop"), fileInput=$("file"), dropTitle=$("dropTitle");
+  const chosen=$("chosen"), fbadge=$("fbadge"), fname=$("fname"), clearBtn=$("clear");
+  const go=$("go"), statusEl=$("status"), results=$("results");
+  const modalBg=$("modalBg"), modalPw=$("modalPw"), modalWarn=$("modalWarn");
+  const modalCancel=$("modalCancel"), modalUnlock=$("modalUnlock");
 
-  let chosen = null;
+  let file=null, pendingBase64=null;
 
-  function setStatus(msg, isErr){ statusEl.textContent = msg; statusEl.classList.toggle("err", !!isErr); }
-
-  fileInput.addEventListener("change", e => pick(e.target.files[0]));
-  ["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
-  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
-  drop.addEventListener("drop", e => pick(e.dataTransfer.files[0]));
-
-  function pick(f){
-    if(!f) return;
-    chosen = f;
-    dropTitle.textContent = f.name;
-    const isPdf = f.name.toLowerCase().endsWith(".pdf");
-    dropHint.textContent = isPdf ? "PDF · will be read with AI" : "CSV · clean import";
-    pwRow.classList.toggle("show", isPdf);
-    go.disabled = false;
-    setStatus("");
-    results.classList.remove("show");
+  function setStatus(msg,isErr,busy){
+    statusEl.innerHTML=(busy?'<span class="spinner"></span>':'')+(msg||"");
+    statusEl.classList.toggle("err",!!isErr);
   }
 
-  function readAsText(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsText(f)})}
-  function readAsBase64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(f)})}
+  fileInput.addEventListener("change",e=>pick(e.target.files[0]));
+  ["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
+  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
+  drop.addEventListener("drop",e=>pick(e.dataTransfer.files[0]));
+  clearBtn.addEventListener("click",()=>reset());
 
-  go.addEventListener("click", async () => {
-    if(!chosen) return;
-    go.disabled = true;
-    const isPdf = chosen.name.toLowerCase().endsWith(".pdf");
-    setStatus(isPdf ? "Reading PDF…" : "Reading CSV…");
+  function reset(){
+    file=null;pendingBase64=null;fileInput.value="";
+    chosen.classList.remove("show");go.disabled=true;
+    setStatus("");results.classList.remove("show");
+  }
 
+  function pick(f){
+    if(!f)return;
+    const isPdf=f.name.toLowerCase().endsWith(".pdf");
+    const isCsv=f.name.toLowerCase().endsWith(".csv");
+    if(!isPdf&&!isCsv){setStatus("That file isn't a CSV or PDF. Please choose a bank statement in one of those formats.",true);return;}
+    file=f;pendingBase64=null;
+    fbadge.textContent=isPdf?"PDF":"CSV";
+    fname.textContent=f.name;
+    chosen.classList.add("show");
+    go.disabled=false;setStatus("");results.classList.remove("show");
+  }
+
+  function readText(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsText(f)})}
+  function readB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(f)})}
+
+  go.addEventListener("click",run);
+
+  async function run(){
+    if(!file)return;
+    go.disabled=true;
+    const isPdf=file.name.toLowerCase().endsWith(".pdf");
+    setStatus("Reading statement…",false,true);
     try{
-      const payload = { fileName: chosen.name };
+      let payload={fileName:file.name};
       if(isPdf){
-        payload.fileType = "pdf";
-        payload.content = await readAsBase64(chosen);
-        payload.password = pwInput.value.trim() || undefined;
-      } else {
-        payload.fileType = "csv";
-        payload.content = await readAsText(chosen);
+        pendingBase64=pendingBase64||await readB64(file);
+        payload.fileType="pdf";payload.content=pendingBase64;
+      }else{
+        payload.fileType="csv";payload.content=await readText(file);
       }
-
-      const r = await fetch("/api/parse", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify(payload)
-      });
-      const data = await r.json();
-      if(!r.ok){ throw new Error(data.error || "Something went wrong."); }
-
-      render(data.result);
-      setStatus("Done.");
+      await send(payload);
     }catch(err){
-      setStatus(err.message, true);
-    }finally{
-      go.disabled = false;
+      setStatus(err.message||"Something went wrong. Please try again.",true);
+      go.disabled=false;
+    }
+  }
+
+  async function send(payload){
+    const r=await fetch("/api/parse",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const data=await r.json();
+
+    if(r.status===401&&data.needsPassword){
+      openModal(data.wrongPassword);
+      go.disabled=false;setStatus("");
+      return;
+    }
+    if(!r.ok){throw new Error(data.error||"Couldn't read this statement.");}
+
+    render(data.result);
+    setStatus("");
+    go.disabled=false;
+  }
+
+  function openModal(wrong){
+    modalWarn.textContent=wrong?"That password didn't work. Please check and try again.":"";
+    modalPw.value="";
+    modalBg.classList.add("show");
+    setTimeout(()=>modalPw.focus(),50);
+  }
+  function closeModal(){modalBg.classList.remove("show")}
+  modalCancel.addEventListener("click",()=>{closeModal();setStatus("Reading cancelled. The PDF stays locked until you enter its password.");});
+  modalBg.addEventListener("click",e=>{if(e.target===modalBg)closeModal()});
+  modalPw.addEventListener("keydown",e=>{if(e.key==="Enter")modalUnlock.click()});
+  modalUnlock.addEventListener("click",async()=>{
+    const pw=modalPw.value.trim();
+    if(!pw){modalWarn.textContent="Please enter the password.";return;}
+    closeModal();
+    setStatus("Unlocking and reading…",false,true);
+    try{
+      await send({fileName:file.name,fileType:"pdf",content:pendingBase64,password:pw});
+    }catch(err){
+      setStatus(err.message,true);go.disabled=false;
     }
   });
 
   function render(d){
-    const inc = d.income || {};
-    // Output 1 — when income arrives
+    const inc=d.income||{};
+    const ccy=inc.currency||"";
+
+    const incomeEl=$("oIncome"), noteEl=$("oIncomeNote"), pill=$("oIncomePill");
     if(d.salary_detected){
-      const day = inc.typical_day_of_month;
-      document.getElementById("oSalary").textContent = day ? ("~ day " + day) : (inc.frequency || "detected");
-      document.getElementById("oSalarySub").textContent =
-        (inc.average_amount ? (inc.currency||"") + " " + inc.average_amount.toLocaleString() + " · " : "") +
-        (inc.frequency || "");
-    } else {
-      document.getElementById("oSalary").textContent = "No salary";
-      document.getElementById("oSalarySub").textContent =
-        "Income looks " + (d.income_type || "irregular").replace(/_/g," ") + " — not a regular paycheck.";
+      incomeEl.textContent=inc.typical_day_of_month?("Around the "+ordinal(inc.typical_day_of_month)):(cap(inc.frequency)||"Detected");
+      noteEl.textContent=(inc.frequency?cap(inc.frequency)+" income":"")+(inc.pay_dates&&inc.pay_dates.length?" · last seen "+inc.pay_dates[inc.pay_dates.length-1]:"");
+      pill.style.display="inline-block";pill.className="pill good";pill.textContent="Regular income found";
+    }else{
+      incomeEl.textContent="No regular salary";
+      noteEl.textContent="Deposits look "+human(d.income_type)+", not a fixed monthly paycheck.";
+      pill.style.display="inline-block";pill.className="pill warn";pill.textContent="Verify income manually";
     }
 
-    // Output 2 — best debit-order day
-    const rec = d.recommended_debit_date || {};
-    document.getElementById("oDebit").textContent = rec.day_of_month ? ("day " + rec.day_of_month) : "—";
-    document.getElementById("oDebitSub").textContent = rec.reason || "";
+    const rec=d.recommended_debit_date||{};
+    $("oDebit").textContent=rec.day_of_month?("The "+ordinal(rec.day_of_month)):"Not enough data";
+    $("oDebitNote").textContent=rec.reason||"Income is too irregular to pick a reliable day.";
 
-    document.getElementById("mBank").textContent = d.bank || "—";
-    document.getElementById("mType").textContent = (d.income_type||"—").replace(/_/g," ");
-    document.getElementById("mFreq").textContent = inc.frequency || "—";
-    document.getElementById("mConf").textContent = d.confidence || "—";
+    $("dBank").textContent=d.bank||"—";
+    $("dHolder").textContent=d.account_holder||"—";
+    const p=d.statement_period||{};
+    $("dPeriod").textContent=(p.from&&p.to)?(p.from+" → "+p.to):"—";
+    $("dType").textContent=human(d.income_type);
+    $("dFreq").textContent=cap(inc.frequency)||"—";
+    $("dAvg").textContent=inc.average_amount?(ccy+" "+Number(inc.average_amount).toLocaleString()):"—";
+    $("dAfford").textContent=d.affordability_note||"—";
+    $("dConf").textContent=cap(d.confidence)||"—";
 
-    document.getElementById("json").textContent = JSON.stringify(d, null, 2);
+    $("json").textContent=JSON.stringify(d,null,2);
     results.classList.add("show");
-    results.scrollIntoView({behavior:"smooth", block:"nearest"});
+    results.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
+
+  function ordinal(n){const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+  function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):""}
+  function human(s){return (s||"unknown").replace(/_/g," ")}
 </script>
 </body>
 </html>
