@@ -107,6 +107,19 @@
     font-size: 13.5px;
     color: var(--subtle);
   }
+  .drop-btn {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 10px 28px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .drop-btn:hover { opacity: .88; }
 
   /* ── File chosen bar ── */
   .file-bar {
@@ -299,6 +312,7 @@
       </div>
       <span class="drop-label" id="dropLabel">Upload your statement</span>
       <span class="drop-sub">CSV or PDF &nbsp;·&nbsp; Any bank</span>
+      <span class="drop-btn">Choose file</span>
     </div>
     <div class="file-bar" id="fileBar">
       <span class="file-tag" id="fileTag">PDF</span>
