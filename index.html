@@ -3,327 +3,514 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Statement Reader</title>
+<title>Income Check</title>
 <style>
-  :root{
-    --bg:#eef1f5;
-    --surface:#ffffff;
-    --line:#d8dee7;
-    --ink:#16202e;
-    --muted:#5d6b7d;
-    --faint:#8a96a6;
-    --blue:#1f5fd6;
-    --blue-soft:#e7eefb;
-    --good:#137a52;
-    --good-soft:#e2f3ec;
-    --warn:#9a5b00;
-    --warn-soft:#fbf0dd;
-    --shadow:0 1px 2px rgba(16,32,46,.06),0 8px 24px rgba(16,32,46,.06);
+  :root {
+    --bg: #f0f4f9;
+    --surface: #ffffff;
+    --border: #dde3ec;
+    --ink: #131b27;
+    --body: #414d5e;
+    --subtle: #7d8fa3;
+    --blue: #1c57d4;
+    --blue-tint: #eef3fc;
+    --green: #0f7a4c;
+    --green-tint: #e4f4ed;
+    --amber: #8f5900;
+    --amber-tint: #fef4e0;
+    --radius: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 32px rgba(0,0,0,.07);
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    line-height:1.5;-webkit-font-smoothing:antialiased;
-    padding:40px 20px 80px;
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
   }
-  .wrap{max-width:720px;margin:0 auto}
 
-  header{margin-bottom:28px}
-  .kicker{font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--blue);text-transform:uppercase;margin-bottom:8px}
-  h1{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
-  .sub{color:var(--muted);font-size:16px;max-width:52ch}
-
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
-  .drop{
-    padding:34px 28px;text-align:center;cursor:pointer;border-radius:14px;
-    border:2px dashed var(--line);transition:border-color .15s,background .15s;
+  /* ── Layout ── */
+  .page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
   }
-  .drop:hover,.drop.over{border-color:var(--blue);background:var(--blue-soft)}
-  .drop .ico{width:40px;height:40px;margin:0 auto 12px;color:var(--blue)}
-  .drop strong{display:block;font-size:17px;font-weight:600;margin-bottom:4px}
-  .drop .hint{font-size:13.5px;color:var(--faint)}
-  input[type=file]{display:none}
 
-  .chosen{display:none;align-items:center;gap:12px;padding:16px 20px;border-top:1px solid var(--line)}
-  .chosen.show{display:flex}
-  .chosen .badge{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:3px 8px;border-radius:5px;background:var(--blue-soft);color:var(--blue)}
-  .chosen .fname{flex:1;font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .chosen button{background:none;border:none;color:var(--faint);cursor:pointer;font-size:13px;text-decoration:underline}
-
-  .go{
-    margin-top:16px;width:100%;padding:15px;border:none;border-radius:11px;
-    background:var(--blue);color:#fff;font-size:15.5px;font-weight:600;cursor:pointer;
-    transition:opacity .15s,transform .05s;
+  /* ── Header ── */
+  .brand {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 14px;
   }
-  .go:hover{opacity:.93}
-  .go:active{transform:translateY(1px)}
-  .go:disabled{background:#aeb8c5;cursor:default}
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .intro {
+    color: var(--body);
+    font-size: 15.5px;
+    max-width: 44ch;
+    line-height: 1.6;
+    margin-bottom: 36px;
+  }
 
-  .status{margin-top:14px;font-size:14px;color:var(--muted);min-height:20px;text-align:center}
-  .status.err{color:var(--warn)}
-  .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
-  @keyframes spin{to{transform:rotate(360deg)}}
+  /* ── Upload zone ── */
+  .uploader {
+    background: var(--surface);
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: border-color .2s, background .2s;
+    cursor: pointer;
+    position: relative;
+  }
+  .uploader:hover, .uploader.over {
+    border-color: var(--blue);
+    background: var(--blue-tint);
+  }
+  .uploader input { display: none; }
 
-  .results{margin-top:28px;display:none}
-  .results.show{display:block;animation:rise .3s ease}
-  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 28px;
+    gap: 10px;
+    text-align: center;
+  }
+  .drop-icon {
+    width: 48px; height: 48px;
+    background: var(--blue-tint);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+  .drop-icon svg { width: 22px; height: 22px; }
+  .drop-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .drop-sub {
+    font-size: 13.5px;
+    color: var(--subtle);
+  }
 
-  .verdicts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:560px){.verdicts{grid-template-columns:1fr}}
-  .verdict{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
-  .verdict .label{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
-  .verdict .dot{width:8px;height:8px;border-radius:50%}
-  .verdict.income .dot{background:var(--good)}
-  .verdict.debit .dot{background:var(--blue)}
-  .verdict .value{font-size:26px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
-  .verdict .note{margin-top:9px;font-size:14px;color:var(--muted);line-height:1.45}
-  .verdict .pill{display:inline-block;margin-top:12px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px}
-  .pill.good{background:var(--good-soft);color:var(--good)}
-  .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  /* ── File chosen bar ── */
+  .file-bar {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: #fafbfc;
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .file-bar.show { display: flex; }
+  .file-tag {
+    font-size: 11px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; padding: 4px 9px; border-radius: 6px;
+    background: var(--blue-tint); color: var(--blue);
+    flex-shrink: 0;
+  }
+  .file-name {
+    flex: 1; font-size: 13.5px; color: var(--ink);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .file-remove {
+    background: none; border: none; color: var(--subtle);
+    font-size: 13px; cursor: pointer; text-decoration: underline;
+    flex-shrink: 0;
+  }
 
-  .detail{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-  .detail h2{font-size:13px;font-weight:600;color:var(--muted);padding:16px 20px 0}
-  .rows{padding:8px 20px 16px}
-  .row{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
-  .row:last-child{border-bottom:none}
-  .row .k{color:var(--faint)}
-  .row .v{font-weight:600;text-align:right}
+  /* ── Submit ── */
+  .btn-submit {
+    margin-top: 14px;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 15.5px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -.01em;
+    transition: opacity .15s, transform .08s;
+  }
+  .btn-submit:hover { opacity: .9; }
+  .btn-submit:active { transform: scale(.99); }
+  .btn-submit:disabled { background: #b4bfcc; cursor: not-allowed; }
 
-  details.raw{margin-top:16px}
-  details.raw summary{cursor:pointer;font-size:13px;color:var(--faint);padding:6px 2px}
-  details.raw pre{margin-top:8px;background:#0f1722;color:#cdd7e3;border-radius:11px;padding:16px;overflow:auto;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55}
+  /* ── Status ── */
+  .status {
+    min-height: 22px;
+    margin-top: 14px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--subtle);
+  }
+  .status.error { color: var(--amber); }
+  .spin {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid var(--border); border-top-color: var(--blue);
+    border-radius: 50%; animation: spin .65s linear infinite;
+    vertical-align: -2px; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  .modal-bg{position:fixed;inset:0;background:rgba(16,32,46,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
-  .modal-bg.show{display:flex}
-  .modal{background:var(--surface);border-radius:16px;padding:26px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(16,32,46,.3)}
-  .modal h3{font-size:18px;font-weight:700;margin-bottom:6px}
-  .modal p{font-size:14px;color:var(--muted);margin-bottom:16px}
-  .modal input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;margin-bottom:8px}
-  .modal input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
-  .modal .mwarn{font-size:13px;color:var(--warn);min-height:18px;margin-bottom:10px}
-  .modal-actions{display:flex;gap:10px}
-  .modal-actions button{flex:1;padding:11px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
-  .modal-actions .primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+  /* ── Results ── */
+  .results { margin-top: 32px; display: none; }
+  .results.show { display: block; animation: up .35s ease; }
+  @keyframes up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-  footer{margin-top:32px;text-align:center;font-size:12.5px;color:var(--faint)}
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 520px) { .results-grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 20px;
+    box-shadow: var(--shadow);
+  }
+  .card-eyebrow {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--subtle);
+    margin-bottom: 14px;
+  }
+  .card-eyebrow .dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  }
+  .card.income .dot { background: var(--green); }
+  .card.debit  .dot { background: var(--blue); }
+
+  .card-value {
+    font-size: 24px; font-weight: 700; letter-spacing: -.02em;
+    line-height: 1.15; margin-bottom: 9px;
+  }
+  .card-note { font-size: 14px; color: var(--body); line-height: 1.5; }
+  .badge {
+    display: inline-block; margin-top: 12px;
+    font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+  }
+  .badge.good { background: var(--green-tint); color: var(--green); }
+  .badge.warn { background: var(--amber-tint); color: var(--amber); }
+
+  /* ── Summary table ── */
+  .summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .summary-head {
+    font-size: 12px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--subtle);
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 16px; padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row-key { color: var(--subtle); flex-shrink: 0; }
+  .row-val { font-weight: 600; text-align: right; }
+
+  /* ── Footer ── */
+  footer {
+    margin-top: 36px; text-align: center;
+    font-size: 12.5px; color: var(--subtle);
+  }
+
+  /* ── Modal ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(10, 20, 40, .48);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px; z-index: 100;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 28px 24px;
+    max-width: 360px; width: 100%;
+    box-shadow: 0 24px 80px rgba(0,0,0,.25);
+    animation: up .2s ease;
+  }
+  .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .modal p { font-size: 14px; color: var(--body); margin-bottom: 18px; line-height: 1.55; }
+  .modal input {
+    width: 100%; padding: 13px 14px;
+    border: 1.5px solid var(--border); border-radius: 11px;
+    font-size: 15px; color: var(--ink);
+    margin-bottom: 8px; outline: none;
+    transition: border-color .15s;
+  }
+  .modal input:focus { border-color: var(--blue); }
+  .modal-warn { font-size: 13px; color: var(--amber); min-height: 18px; margin-bottom: 14px; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btns button {
+    flex: 1; padding: 12px; border-radius: 11px; font-size: 14px;
+    font-weight: 600; cursor: pointer; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--ink);
+  }
+  .modal-btns .primary { background: var(--blue); color: #fff; border-color: var(--blue); }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="kicker">Customer onboarding</div>
-    <h1>Statement Reader</h1>
-    <p class="sub">Upload a customer's bank statement to see when their income arrives and the safest day to collect a debit order. Works with any bank, as a CSV or PDF.</p>
-  </header>
+<div class="page">
 
-  <div class="card">
-    <label class="drop" id="drop">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L8 8m4-4l4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-      <strong id="dropTitle">Choose a statement, or drop it here</strong>
-      <span class="hint">CSV or PDF · up to ~15 MB</span>
-      <input type="file" id="file" accept=".csv,.pdf" />
-    </label>
-    <div class="chosen" id="chosen">
-      <span class="badge" id="fbadge">PDF</span>
-      <span class="fname" id="fname"></span>
-      <button id="clear">Remove</button>
+  <div class="brand">Financial onboarding</div>
+  <h1>Check your bank statement</h1>
+  <p class="intro">Upload your latest bank statement and we'll identify when your income comes in and the right day to set up your debit order.</p>
+
+  <label class="uploader" id="uploader">
+    <div class="drop-zone">
+      <div class="drop-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <span class="drop-label" id="dropLabel">Upload your statement</span>
+      <span class="drop-sub">CSV or PDF &nbsp;·&nbsp; Any bank</span>
     </div>
-  </div>
+    <div class="file-bar" id="fileBar">
+      <span class="file-tag" id="fileTag">PDF</span>
+      <span class="file-name" id="fileName"></span>
+      <button class="file-remove" id="fileRemove" type="button">Remove</button>
+    </div>
+    <input type="file" id="fileInput" accept=".csv,.pdf" />
+  </label>
 
-  <button class="go" id="go" disabled>Read statement</button>
+  <button class="btn-submit" id="submitBtn" disabled>Analyse statement</button>
   <div class="status" id="status"></div>
 
   <div class="results" id="results">
-    <div class="verdicts">
-      <div class="verdict income">
-        <div class="label"><span class="dot"></span> When income arrives</div>
-        <div class="value" id="oIncome">—</div>
-        <div class="note" id="oIncomeNote"></div>
-        <span class="pill" id="oIncomePill" style="display:none"></span>
+    <div class="results-grid">
+      <div class="card income">
+        <div class="card-eyebrow"><span class="dot"></span>Income timing</div>
+        <div class="card-value" id="rIncome">—</div>
+        <div class="card-note" id="rIncomeNote"></div>
+        <span class="badge" id="rBadge" style="display:none"></span>
       </div>
-      <div class="verdict debit">
-        <div class="label"><span class="dot"></span> Best day to collect</div>
-        <div class="value" id="oDebit">—</div>
-        <div class="note" id="oDebitNote"></div>
-      </div>
-    </div>
-
-    <div class="detail">
-      <h2>Summary</h2>
-      <div class="rows">
-        <div class="row"><span class="k">Bank</span><span class="v" id="dBank">—</span></div>
-        <div class="row"><span class="k">Account holder</span><span class="v" id="dHolder">—</span></div>
-        <div class="row"><span class="k">Statement period</span><span class="v" id="dPeriod">—</span></div>
-        <div class="row"><span class="k">Income type</span><span class="v" id="dType">—</span></div>
-        <div class="row"><span class="k">Pay frequency</span><span class="v" id="dFreq">—</span></div>
-        <div class="row"><span class="k">Average amount</span><span class="v" id="dAvg">—</span></div>
-        <div class="row"><span class="k">Affordability</span><span class="v" id="dAfford">—</span></div>
-        <div class="row"><span class="k">Reading confidence</span><span class="v" id="dConf">—</span></div>
+      <div class="card debit">
+        <div class="card-eyebrow"><span class="dot"></span>Recommended debit day</div>
+        <div class="card-value" id="rDebit">—</div>
+        <div class="card-note" id="rDebitNote"></div>
       </div>
     </div>
 
-    <details class="raw">
-      <summary>View full data</summary>
-      <pre id="json"></pre>
-    </details>
+    <div class="summary">
+      <div class="summary-head">Statement summary</div>
+      <div class="row"><span class="row-key">Bank</span><span class="row-val" id="sBank">—</span></div>
+      <div class="row"><span class="row-key">Account holder</span><span class="row-val" id="sHolder">—</span></div>
+      <div class="row"><span class="row-key">Statement period</span><span class="row-val" id="sPeriod">—</span></div>
+      <div class="row"><span class="row-key">Income type</span><span class="row-val" id="sType">—</span></div>
+      <div class="row"><span class="row-key">Pay frequency</span><span class="row-val" id="sFreq">—</span></div>
+      <div class="row"><span class="row-key">Average income</span><span class="row-val" id="sAvg">—</span></div>
+      <div class="row"><span class="row-key">Affordability note</span><span class="row-val" id="sAfford">—</span></div>
+    </div>
   </div>
 
-  <footer>Statements are read securely and not stored.</footer>
+  <footer>Your statement is analysed securely and not stored.</footer>
 </div>
 
-<div class="modal-bg" id="modalBg">
+<!-- Password modal -->
+<div class="overlay" id="overlay">
   <div class="modal">
-    <h3>This statement is password-protected</h3>
-    <p>Enter the password the bank set on this PDF to open it.</p>
-    <input type="text" id="modalPw" placeholder="Statement password" autocomplete="off" />
-    <div class="mwarn" id="modalWarn"></div>
-    <div class="modal-actions">
+    <h3>Statement is password protected</h3>
+    <p>Enter the password set by your bank to open this statement. This is usually your ID number or date of birth.</p>
+    <input type="text" id="modalPw" placeholder="Enter password" autocomplete="off" />
+    <div class="modal-warn" id="modalWarn"></div>
+    <div class="modal-btns">
       <button id="modalCancel">Cancel</button>
-      <button class="primary" id="modalUnlock">Unlock &amp; read</button>
+      <button class="primary" id="modalUnlock">Open &amp; analyse</button>
     </div>
   </div>
 </div>
 
 <script>
   const $ = id => document.getElementById(id);
-  const drop=$("drop"), fileInput=$("file"), dropTitle=$("dropTitle");
-  const chosen=$("chosen"), fbadge=$("fbadge"), fname=$("fname"), clearBtn=$("clear");
-  const go=$("go"), statusEl=$("status"), results=$("results");
-  const modalBg=$("modalBg"), modalPw=$("modalPw"), modalWarn=$("modalWarn");
-  const modalCancel=$("modalCancel"), modalUnlock=$("modalUnlock");
+  const uploader = $("uploader"), fileInput = $("fileInput");
+  const dropLabel = $("dropLabel"), fileBar = $("fileBar");
+  const fileTag = $("fileTag"), fileName = $("fileName"), fileRemove = $("fileRemove");
+  const submitBtn = $("submitBtn"), statusEl = $("status"), results = $("results");
+  const overlay = $("overlay"), modalPw = $("modalPw"), modalWarn = $("modalWarn");
 
-  let file=null, pendingBase64=null;
+  let currentFile = null, cachedB64 = null;
 
-  function setStatus(msg,isErr,busy){
-    statusEl.innerHTML=(busy?'<span class="spinner"></span>':'')+(msg||"");
-    statusEl.classList.toggle("err",!!isErr);
+  // Drag & drop
+  fileInput.addEventListener("change", e => pick(e.target.files[0]));
+  ["dragover","dragenter"].forEach(e => uploader.addEventListener(e, ev => { ev.preventDefault(); uploader.classList.add("over"); }));
+  ["dragleave","drop"].forEach(e => uploader.addEventListener(e, ev => { ev.preventDefault(); uploader.classList.remove("over"); }));
+  uploader.addEventListener("drop", e => pick(e.dataTransfer.files[0]));
+  fileRemove.addEventListener("click", e => { e.preventDefault(); reset(); });
+
+  function pick(f) {
+    if (!f) return;
+    const ext = f.name.split(".").pop().toLowerCase();
+    if (!["pdf","csv"].includes(ext)) { setStatus("Please choose a PDF or CSV bank statement.", true); return; }
+    currentFile = f; cachedB64 = null;
+    fileTag.textContent = ext.toUpperCase();
+    fileName.textContent = f.name;
+    fileBar.classList.add("show");
+    dropLabel.textContent = "Change statement";
+    submitBtn.disabled = false;
+    setStatus(""); results.classList.remove("show");
   }
 
-  fileInput.addEventListener("change",e=>pick(e.target.files[0]));
-  ["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
-  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
-  drop.addEventListener("drop",e=>pick(e.dataTransfer.files[0]));
-  clearBtn.addEventListener("click",()=>reset());
-
-  function reset(){
-    file=null;pendingBase64=null;fileInput.value="";
-    chosen.classList.remove("show");go.disabled=true;
-    setStatus("");results.classList.remove("show");
+  function reset() {
+    currentFile = null; cachedB64 = null; fileInput.value = "";
+    fileBar.classList.remove("show");
+    dropLabel.textContent = "Upload your statement";
+    submitBtn.disabled = true;
+    setStatus(""); results.classList.remove("show");
   }
 
-  function pick(f){
-    if(!f)return;
-    const isPdf=f.name.toLowerCase().endsWith(".pdf");
-    const isCsv=f.name.toLowerCase().endsWith(".csv");
-    if(!isPdf&&!isCsv){setStatus("That file isn't a CSV or PDF. Please choose a bank statement in one of those formats.",true);return;}
-    file=f;pendingBase64=null;
-    fbadge.textContent=isPdf?"PDF":"CSV";
-    fname.textContent=f.name;
-    chosen.classList.add("show");
-    go.disabled=false;setStatus("");results.classList.remove("show");
+  function setStatus(msg, isErr, busy) {
+    statusEl.innerHTML = (busy ? '<span class="spin"></span>' : "") + (msg || "");
+    statusEl.className = "status" + (isErr ? " error" : "");
   }
 
-  function readText(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsText(f)})}
-  function readB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(f)})}
+  const readText = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsText(f); });
+  const readB64  = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(f); });
 
-  go.addEventListener("click",run);
+  submitBtn.addEventListener("click", () => run());
 
-  async function run(){
-    if(!file)return;
-    go.disabled=true;
-    const isPdf=file.name.toLowerCase().endsWith(".pdf");
-    setStatus("Reading statement…",false,true);
-    try{
-      let payload={fileName:file.name};
-      if(isPdf){
-        pendingBase64=pendingBase64||await readB64(file);
-        payload.fileType="pdf";payload.content=pendingBase64;
-      }else{
-        payload.fileType="csv";payload.content=await readText(file);
+  async function run(password) {
+    if (!currentFile) return;
+    submitBtn.disabled = true;
+    const isPdf = currentFile.name.toLowerCase().endsWith(".pdf");
+    setStatus("Analysing your statement…", false, true);
+
+    try {
+      const payload = { fileName: currentFile.name };
+      if (isPdf) {
+        cachedB64 = cachedB64 || await readB64(currentFile);
+        payload.fileType = "pdf";
+        payload.content = cachedB64;
+        if (password) payload.password = password;
+      } else {
+        payload.fileType = "csv";
+        payload.content = await readText(currentFile);
       }
       await send(payload);
-    }catch(err){
-      setStatus(err.message||"Something went wrong. Please try again.",true);
-      go.disabled=false;
+    } catch (err) {
+      setStatus(err.message || "Something went wrong. Please try again.", true);
+      submitBtn.disabled = false;
     }
   }
 
-  async function send(payload){
-    const r=await fetch("/api/parse",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-    const data=await r.json();
+  async function send(payload) {
+    const resp = await fetch("/api/parse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
 
-    if(r.status===401&&data.needsPassword){
+    if (resp.status === 401 && data.needsPassword) {
+      submitBtn.disabled = false;
+      setStatus("");
       openModal(data.wrongPassword);
-      go.disabled=false;setStatus("");
       return;
     }
-    if(!r.ok){throw new Error(data.error||"Couldn't read this statement.");}
+    if (!resp.ok) throw new Error(data.error || "Couldn't read this statement.");
 
     render(data.result);
     setStatus("");
-    go.disabled=false;
+    submitBtn.disabled = false;
   }
 
-  function openModal(wrong){
-    modalWarn.textContent=wrong?"That password didn't work. Please check and try again.":"";
-    modalPw.value="";
-    modalBg.classList.add("show");
-    setTimeout(()=>modalPw.focus(),50);
+  // Modal
+  function openModal(wrong) {
+    modalWarn.textContent = wrong ? "That password didn't match. Please try again." : "";
+    modalPw.value = "";
+    overlay.classList.add("show");
+    setTimeout(() => modalPw.focus(), 60);
   }
-  function closeModal(){modalBg.classList.remove("show")}
-  modalCancel.addEventListener("click",()=>{closeModal();setStatus("Reading cancelled. The PDF stays locked until you enter its password.");});
-  modalBg.addEventListener("click",e=>{if(e.target===modalBg)closeModal()});
-  modalPw.addEventListener("keydown",e=>{if(e.key==="Enter")modalUnlock.click()});
-  modalUnlock.addEventListener("click",async()=>{
-    const pw=modalPw.value.trim();
-    if(!pw){modalWarn.textContent="Please enter the password.";return;}
+  function closeModal() { overlay.classList.remove("show"); }
+
+  $("modalCancel").addEventListener("click", () => { closeModal(); setStatus(""); });
+  overlay.addEventListener("click", e => { if (e.target === overlay) closeModal(); });
+  modalPw.addEventListener("keydown", e => { if (e.key === "Enter") $("modalUnlock").click(); });
+  $("modalUnlock").addEventListener("click", async () => {
+    const pw = modalPw.value.trim();
+    if (!pw) { modalWarn.textContent = "Please enter the password."; return; }
     closeModal();
-    setStatus("Unlocking and reading…",false,true);
-    try{
-      await send({fileName:file.name,fileType:"pdf",content:pendingBase64,password:pw});
-    }catch(err){
-      setStatus(err.message,true);go.disabled=false;
-    }
+    setStatus("Unlocking statement…", false, true);
+    try { await send({ fileName: currentFile.name, fileType: "pdf", content: cachedB64, password: pw }); }
+    catch (err) { setStatus(err.message, true); submitBtn.disabled = false; }
   });
 
-  function render(d){
-    const inc=d.income||{};
-    const ccy=inc.currency||"";
+  // Render results
+  function render(d) {
+    const inc = d.income || {};
+    const ccy = inc.currency || "";
 
-    const incomeEl=$("oIncome"), noteEl=$("oIncomeNote"), pill=$("oIncomePill");
-    if(d.salary_detected){
-      incomeEl.textContent=inc.typical_day_of_month?("Around the "+ordinal(inc.typical_day_of_month)):(cap(inc.frequency)||"Detected");
-      noteEl.textContent=(inc.frequency?cap(inc.frequency)+" income":"")+(inc.pay_dates&&inc.pay_dates.length?" · last seen "+inc.pay_dates[inc.pay_dates.length-1]:"");
-      pill.style.display="inline-block";pill.className="pill good";pill.textContent="Regular income found";
-    }else{
-      incomeEl.textContent="No regular salary";
-      noteEl.textContent="Deposits look "+human(d.income_type)+", not a fixed monthly paycheck.";
-      pill.style.display="inline-block";pill.className="pill warn";pill.textContent="Verify income manually";
+    // Income card
+    const badge = $("rBadge");
+    if (d.salary_detected) {
+      $("rIncome").textContent = inc.typical_day_of_month ? "Around the " + ord(inc.typical_day_of_month) : cap(inc.frequency) || "Detected";
+      $("rIncomeNote").textContent = [cap(inc.frequency), inc.average_amount ? ccy + " " + fmt(inc.average_amount) + " avg" : ""].filter(Boolean).join(" · ");
+      badge.style.display = "inline-block"; badge.className = "badge good";
+      badge.textContent = "Regular income found";
+    } else {
+      $("rIncome").textContent = "No regular salary";
+      $("rIncomeNote").textContent = "Income appears " + human(d.income_type) + ". Recommend verifying manually.";
+      badge.style.display = "inline-block"; badge.className = "badge warn";
+      badge.textContent = "Verify income manually";
     }
 
-    const rec=d.recommended_debit_date||{};
-    $("oDebit").textContent=rec.day_of_month?("The "+ordinal(rec.day_of_month)):"Not enough data";
-    $("oDebitNote").textContent=rec.reason||"Income is too irregular to pick a reliable day.";
+    // Debit card
+    const rec = d.recommended_debit_date || {};
+    $("rDebit").textContent = rec.day_of_month ? "The " + ord(rec.day_of_month) : "Not enough data";
+    $("rDebitNote").textContent = rec.reason || "Income is too irregular to recommend a specific date.";
 
-    $("dBank").textContent=d.bank||"—";
-    $("dHolder").textContent=d.account_holder||"—";
-    const p=d.statement_period||{};
-    $("dPeriod").textContent=(p.from&&p.to)?(p.from+" → "+p.to):"—";
-    $("dType").textContent=human(d.income_type);
-    $("dFreq").textContent=cap(inc.frequency)||"—";
-    $("dAvg").textContent=inc.average_amount?(ccy+" "+Number(inc.average_amount).toLocaleString()):"—";
-    $("dAfford").textContent=d.affordability_note||"—";
-    $("dConf").textContent=cap(d.confidence)||"—";
+    // Summary
+    $("sBank").textContent = d.bank || "—";
+    $("sHolder").textContent = d.account_holder || "—";
+    const p = d.statement_period || {};
+    $("sPeriod").textContent = (p.from && p.to) ? p.from + " → " + p.to : "—";
+    $("sType").textContent = human(d.income_type);
+    $("sFreq").textContent = cap(inc.frequency) || "—";
+    $("sAvg").textContent = inc.average_amount ? ccy + " " + fmt(inc.average_amount) : "—";
+    $("sAfford").textContent = d.affordability_note || "—";
 
-    $("json").textContent=JSON.stringify(d,null,2);
     results.classList.add("show");
-    results.scrollIntoView({behavior:"smooth",block:"nearest"});
+    results.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
-  function ordinal(n){const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
-  function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):""}
-  function human(s){return (s||"unknown").replace(/_/g," ")}
+  function ord(n) { const s = ["th","st","nd","rd"], v = n % 100; return n + (s[(v-20)%10] || s[v] || s[0]); }
+  function cap(s) { return s ? s[0].toUpperCase() + s.slice(1) : ""; }
+  function human(s) { return (s || "unknown").replace(/_/g, " "); }
+  function fmt(n) { return Number(n).toLocaleString(); }
 </script>
 </body>
 </html>
