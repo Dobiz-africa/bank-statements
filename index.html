@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Statement Reader</title>
+<title></title>
 <style>
   :root {
     --bg: #f0f4f9;
@@ -18,8 +18,6 @@
     --green-tint: #e4f4ed;
     --amber: #8f5900;
     --amber-tint: #fef4e0;
-    --orange: #c0440a;
-    --orange-tint: #fdf0e8;
     --radius: 16px;
     --shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 32px rgba(0,0,0,.07);
   }
@@ -36,12 +34,14 @@
     min-height: 100vh;
   }
 
+  /* ── Layout ── */
   .page {
     max-width: 640px;
     margin: 0 auto;
     padding: 48px 20px 80px;
   }
 
+  /* ── Header ── */
   .brand {
     font-size: 12px;
     font-weight: 700;
@@ -98,8 +98,15 @@
     margin-bottom: 4px;
   }
   .drop-icon svg { width: 22px; height: 22px; }
-  .drop-label { font-size: 16px; font-weight: 600; color: var(--ink); }
-  .drop-sub { font-size: 13.5px; color: var(--subtle); }
+  .drop-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .drop-sub {
+    font-size: 13.5px;
+    color: var(--subtle);
+  }
   .drop-btn {
     display: inline-block;
     margin-top: 6px;
@@ -114,6 +121,7 @@
   }
   .drop-btn:hover { opacity: .88; }
 
+  /* ── File chosen bar ── */
   .file-bar {
     display: none;
     align-items: center;
@@ -127,7 +135,8 @@
   .file-tag {
     font-size: 11px; font-weight: 700; letter-spacing: .04em;
     text-transform: uppercase; padding: 4px 9px; border-radius: 6px;
-    background: var(--blue-tint); color: var(--blue); flex-shrink: 0;
+    background: var(--blue-tint); color: var(--blue);
+    flex-shrink: 0;
   }
   .file-name {
     flex: 1; font-size: 13.5px; color: var(--ink);
@@ -135,9 +144,11 @@
   }
   .file-remove {
     background: none; border: none; color: var(--subtle);
-    font-size: 13px; cursor: pointer; text-decoration: underline; flex-shrink: 0;
+    font-size: 13px; cursor: pointer; text-decoration: underline;
+    flex-shrink: 0;
   }
 
+  /* ── Submit ── */
   .btn-submit {
     margin-top: 14px;
     width: 100%;
@@ -156,6 +167,7 @@
   .btn-submit:active { transform: scale(.99); }
   .btn-submit:disabled { background: #b4bfcc; cursor: not-allowed; }
 
+  /* ── Status ── */
   .status {
     min-height: 22px;
     margin-top: 14px;
@@ -171,94 +183,6 @@
     vertical-align: -2px; margin-right: 8px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── Manual verification panel ── */
-  .manual-panel {
-    display: none;
-    margin-top: 24px;
-    background: var(--surface);
-    border: 1.5px solid var(--amber);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    animation: up .35s ease;
-  }
-  .manual-panel.show { display: block; }
-
-  .manual-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 20px 22px 18px;
-    border-bottom: 1px solid var(--border);
-    background: var(--amber-tint);
-  }
-  .manual-icon {
-    width: 36px; height: 36px; flex-shrink: 0;
-    background: #fff;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--amber);
-    border: 1.5px solid var(--amber);
-  }
-  .manual-icon svg { width: 16px; height: 16px; }
-  .manual-header-text h3 {
-    font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 3px;
-  }
-  .manual-header-text p {
-    font-size: 13.5px; color: var(--body); line-height: 1.5;
-  }
-
-  .manual-form { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
-
-  .field { display: flex; flex-direction: column; gap: 6px; }
-  .field label {
-    font-size: 12.5px; font-weight: 700; letter-spacing: .03em;
-    text-transform: uppercase; color: var(--subtle);
-  }
-  .field select,
-  .field input[type="text"],
-  .field input[type="number"] {
-    padding: 11px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    font-size: 15px;
-    color: var(--ink);
-    background: var(--surface);
-    outline: none;
-    transition: border-color .15s;
-    appearance: none;
-    -webkit-appearance: none;
-  }
-  .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237d8fa3' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-  .field select:focus,
-  .field input:focus { border-color: var(--blue); }
-
-  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
-
-  .btn-confirm {
-    padding: 13px;
-    border: none;
-    border-radius: 11px;
-    background: var(--amber);
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity .15s;
-    margin-top: 4px;
-  }
-  .btn-confirm:hover { opacity: .88; }
-  .btn-confirm:disabled { opacity: .5; cursor: not-allowed; }
-
-  .manual-note {
-    font-size: 12.5px;
-    color: var(--subtle);
-    text-align: center;
-    padding-bottom: 4px;
-    line-height: 1.5;
-  }
 
   /* ── Results ── */
   .results { margin-top: 32px; display: none; }
@@ -286,7 +210,9 @@
     text-transform: uppercase; color: var(--subtle);
     margin-bottom: 14px;
   }
-  .card-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .card-eyebrow .dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  }
   .card.income .dot { background: var(--green); }
   .card.debit  .dot { background: var(--blue); }
 
@@ -299,10 +225,10 @@
     display: inline-block; margin-top: 12px;
     font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
   }
-  .badge.good    { background: var(--green-tint); color: var(--green); }
-  .badge.warn    { background: var(--amber-tint); color: var(--amber); }
-  .badge.manual  { background: var(--orange-tint); color: var(--orange); }
+  .badge.good { background: var(--green-tint); color: var(--green); }
+  .badge.warn { background: var(--amber-tint); color: var(--amber); }
 
+  /* ── Summary table ── */
   .summary {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -326,30 +252,13 @@
   .row-key { color: var(--subtle); flex-shrink: 0; }
   .row-val { font-weight: 600; text-align: right; }
 
-  /* self-reported banner */
-  .self-reported-banner {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 20px;
-    background: var(--orange-tint);
-    border: 1px solid #f0c4a8;
-    border-radius: 11px;
-    margin-bottom: 14px;
-    font-size: 13.5px;
-    color: var(--orange);
-    font-weight: 500;
-    line-height: 1.45;
-  }
-  .self-reported-banner.show { display: flex; }
-  .self-reported-banner svg { flex-shrink: 0; }
-
+  /* ── Footer ── */
   footer {
     margin-top: 36px; text-align: center;
     font-size: 12.5px; color: var(--subtle);
   }
 
-  /* ── Password modal ── */
+  /* ── Modal ── */
   .overlay {
     position: fixed; inset: 0;
     background: rgba(10, 20, 40, .48);
@@ -416,72 +325,7 @@
   <button class="btn-submit" id="submitBtn" disabled>Analyse statement</button>
   <div class="status" id="status"></div>
 
-  <!-- ── Manual verification panel ── -->
-  <div class="manual-panel" id="manualPanel">
-    <div class="manual-header">
-      <div class="manual-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-      </div>
-      <div class="manual-header-text">
-        <h3>We couldn't detect a regular salary</h3>
-        <p>Your income looks irregular or couldn't be read clearly. Fill in your details below so we can still find the best debit date for you.</p>
-      </div>
-    </div>
-
-    <div class="manual-form">
-      <div class="field">
-        <label for="empType">Employment type</label>
-        <select id="empType">
-          <option value="">Select one…</option>
-          <option value="employed">Permanently employed</option>
-          <option value="contract">Contract / fixed term</option>
-          <option value="self_employed">Self-employed / freelance</option>
-          <option value="business">Business owner</option>
-          <option value="grant">Social grant recipient</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label for="payFreq">Pay frequency</label>
-          <select id="payFreq">
-            <option value="">Select…</option>
-            <option value="monthly">Monthly</option>
-            <option value="fortnightly">Fortnightly</option>
-            <option value="weekly">Weekly</option>
-            <option value="irregular">Irregular</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="payDay">Pay day (day of month)</label>
-          <input type="number" id="payDay" placeholder="e.g. 25" min="1" max="31" />
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="incomeAmount">Approximate monthly income (ZAR)</label>
-        <input type="number" id="incomeAmount" placeholder="e.g. 15000" min="0" />
-      </div>
-
-      <button class="btn-confirm" id="confirmBtn" disabled>Confirm my details</button>
-      <p class="manual-note">Your details are used only to calculate a debit date and are not stored.</p>
-    </div>
-  </div>
-
-  <!-- ── Results ── -->
   <div class="results" id="results">
-    <div class="self-reported-banner" id="selfReportedBanner">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      Income details were self-reported — could not be automatically verified from the statement.
-    </div>
-
     <div class="results-grid">
       <div class="card income">
         <div class="card-eyebrow"><span class="dot"></span>Income timing</div>
@@ -532,11 +376,10 @@
   const fileTag = $("fileTag"), fileName = $("fileName"), fileRemove = $("fileRemove");
   const submitBtn = $("submitBtn"), statusEl = $("status"), results = $("results");
   const overlay = $("overlay"), modalPw = $("modalPw"), modalWarn = $("modalWarn");
-  const manualPanel = $("manualPanel"), confirmBtn = $("confirmBtn");
 
-  let currentFile = null, cachedB64 = null, lastAIResult = null;
+  let currentFile = null, cachedB64 = null;
 
-  // ── File handling ────────────────────────────────────────────────────────
+  // Drag & drop
   fileInput.addEventListener("change", e => pick(e.target.files[0]));
   ["dragover","dragenter"].forEach(e => uploader.addEventListener(e, ev => { ev.preventDefault(); uploader.classList.add("over"); }));
   ["dragleave","drop"].forEach(e => uploader.addEventListener(e, ev => { ev.preventDefault(); uploader.classList.remove("over"); }));
@@ -555,16 +398,14 @@
     dropLabel.textContent = "Change statement";
     submitBtn.disabled = false;
     setStatus(""); results.classList.remove("show");
-    manualPanel.classList.remove("show");
   }
 
   function reset() {
-    currentFile = null; cachedB64 = null; fileInput.value = ""; lastAIResult = null;
+    currentFile = null; cachedB64 = null; fileInput.value = "";
     fileBar.classList.remove("show");
     dropLabel.textContent = "Upload your statement";
     submitBtn.disabled = true;
     setStatus(""); results.classList.remove("show");
-    manualPanel.classList.remove("show");
   }
 
   function setStatus(msg, isErr, busy) {
@@ -575,13 +416,11 @@
   const readText = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsText(f); });
   const readB64  = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(f); });
 
-  // ── Submit ───────────────────────────────────────────────────────────────
   submitBtn.addEventListener("click", () => run());
 
   async function run(password) {
     if (!currentFile) return;
     submitBtn.disabled = true;
-    manualPanel.classList.remove("show");
     const isPdf = currentFile.name.toLowerCase().endsWith(".pdf");
     setStatus("Analysing your statement…", false, true);
 
@@ -619,67 +458,12 @@
     }
     if (!resp.ok) throw new Error(data.error || "Couldn't read this statement.");
 
-    lastAIResult = data.result;
+    render(data.result);
     setStatus("");
     submitBtn.disabled = false;
-
-    // If no salary detected, show the manual panel instead of results
-    if (!data.result.salary_detected) {
-      manualPanel.classList.add("show");
-      manualPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    } else {
-      render(data.result);
-    }
   }
 
-  // ── Manual verification form ─────────────────────────────────────────────
-  // Enable confirm button only when required fields are filled
-  [$("empType"), $("payFreq"), $("payDay"), $("incomeAmount")].forEach(el => {
-    el.addEventListener("input", validateManualForm);
-    el.addEventListener("change", validateManualForm);
-  });
-
-  function validateManualForm() {
-    const ok = $("empType").value && $("payFreq").value &&
-                $("payDay").value && $("incomeAmount").value;
-    confirmBtn.disabled = !ok;
-  }
-
-  confirmBtn.addEventListener("click", async () => {
-    const manualData = {
-      employmentType: $("empType").value,
-      frequency: $("payFreq").value,
-      payDay: $("payDay").value,
-      amount: $("incomeAmount").value,
-    };
-
-    confirmBtn.disabled = true;
-    setStatus("Calculating your debit date…", false, true);
-
-    try {
-      const resp = await fetch("/api/parse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          manualConfirmation: true,
-          manualData,
-          bank: lastAIResult?.bank,
-          accountHolder: lastAIResult?.account_holder,
-        }),
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || "Something went wrong.");
-
-      setStatus("");
-      manualPanel.classList.remove("show");
-      render(data.result, true);
-    } catch (err) {
-      setStatus(err.message, true);
-      confirmBtn.disabled = false;
-    }
-  });
-
-  // ── Password modal ───────────────────────────────────────────────────────
+  // Modal
   function openModal(wrong) {
     modalWarn.textContent = wrong ? "That password didn't match. Please try again." : "";
     modalPw.value = "";
@@ -700,44 +484,31 @@
     catch (err) { setStatus(err.message, true); submitBtn.disabled = false; }
   });
 
-  // ── Render results ───────────────────────────────────────────────────────
-  function render(d, selfReported = false) {
+  // Render results
+  function render(d) {
     const inc = d.income || {};
     const ccy = inc.currency || "";
+
+    // Income card
     const badge = $("rBadge");
-
-    // Self-reported banner
-    $("selfReportedBanner").classList.toggle("show", selfReported || !!d.income_manually_confirmed);
-
-    if (d.salary_detected || d.income_manually_confirmed) {
-      $("rIncome").textContent = inc.typical_day_of_month
-        ? "Around the " + ord(inc.typical_day_of_month)
-        : cap(inc.frequency) || "Confirmed";
-      $("rIncomeNote").textContent = [
-        cap(inc.frequency),
-        inc.average_amount ? ccy + " " + fmt(inc.average_amount) + " avg" : ""
-      ].filter(Boolean).join(" · ");
-
-      badge.style.display = "inline-block";
-      if (d.income_manually_confirmed) {
-        badge.className = "badge manual";
-        badge.textContent = "Self-reported income";
-      } else {
-        badge.className = "badge good";
-        badge.textContent = "Regular income found";
-      }
+    if (d.salary_detected) {
+      $("rIncome").textContent = inc.typical_day_of_month ? "Around the " + ord(inc.typical_day_of_month) : cap(inc.frequency) || "Detected";
+      $("rIncomeNote").textContent = [cap(inc.frequency), inc.average_amount ? ccy + " " + fmt(inc.average_amount) + " avg" : ""].filter(Boolean).join(" · ");
+      badge.style.display = "inline-block"; badge.className = "badge good";
+      badge.textContent = "Regular income found";
     } else {
       $("rIncome").textContent = "No regular salary";
-      $("rIncomeNote").textContent = "Income appears " + human(d.income_type) + ".";
-      badge.style.display = "inline-block";
-      badge.className = "badge warn";
+      $("rIncomeNote").textContent = "Income appears " + human(d.income_type) + ". Recommend verifying manually.";
+      badge.style.display = "inline-block"; badge.className = "badge warn";
       badge.textContent = "Verify income manually";
     }
 
+    // Debit card
     const rec = d.recommended_debit_date || {};
     $("rDebit").textContent = rec.day_of_month ? "The " + ord(rec.day_of_month) : "Not enough data";
     $("rDebitNote").textContent = rec.reason || "Income is too irregular to recommend a specific date.";
 
+    // Summary
     $("sBank").textContent = d.bank || "—";
     $("sHolder").textContent = d.account_holder || "—";
     const p = d.statement_period || {};
