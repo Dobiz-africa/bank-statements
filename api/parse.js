@@ -153,6 +153,8 @@ async function extractPdfText(base64, password) {
     data: new Uint8Array(data),
     password: password || undefined,
     useSystemFonts: true,
+    disableWorker: true,
+    isEvalSupported: false,
   });
 
   const pdf = await loadingTask.promise;
