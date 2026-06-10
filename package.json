@@ -4,6 +4,7 @@
   "description": "Reads bank statements (CSV or PDF, any bank) and returns when income arrives + best debit-order day.",
   "type": "module",
   "dependencies": {
-    "pdfjs-dist": "^4.6.82"
+    "pdfjs-dist": "^4.6.82",
+    "unpdf": "^1.0.0"
   }
 }
