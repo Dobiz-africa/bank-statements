@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "functions": {
+    "api/parse.js": { "maxDuration": 60 }
+  }
+}

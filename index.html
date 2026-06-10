@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Statement Reader</title>
+<style>
+  :root{
+    --ink:#1a1c1e;        /* near-black ink */
+    --paper:#f3efe6;      /* warm ledger paper */
+    --paper-edge:#e7e1d3;
+    --amber:#c2683b;      /* terracotta-amber accent, used sparingly */
+    --amber-soft:#e8d9c4;
+    --green:#3f6b4f;      /* reliable / good */
+    --rule:#cdc5b4;       /* hairline */
+    --muted:#6b6458;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Iowan Old Style",Georgia,serif;
+    line-height:1.5;
+    padding:32px 20px 80px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+
+  /* header / hero */
+  .eyebrow{
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:10px;
+  }
+  h1{
+    font-size:38px;line-height:1.05;font-weight:600;letter-spacing:-.01em;
+    margin-bottom:8px;
+  }
+  .lede{color:var(--muted);font-size:16px;max-width:48ch;margin-bottom:28px}
+
+  /* upload card */
+  .drop{
+    border:1.5px dashed var(--rule);
+    background:rgba(255,255,255,.45);
+    padding:28px;border-radius:4px;text-align:center;
+    transition:border-color .15s,background .15s;cursor:pointer;
+  }
+  .drop:hover,.drop.over{border-color:var(--amber);background:rgba(255,255,255,.7)}
+  .drop strong{display:block;font-size:17px;margin-bottom:4px}
+  .drop span{font-family:ui-monospace,monospace;font-size:12px;color:var(--muted)}
+  input[type=file]{display:none}
+
+  .pw{
+    margin-top:14px;display:none;align-items:center;gap:8px;justify-content:center;
+    font-family:ui-monospace,monospace;font-size:12px;color:var(--muted)
+  }
+  .pw.show{display:flex}
+  .pw input{
+    font-family:ui-monospace,monospace;font-size:13px;padding:6px 8px;
+    border:1px solid var(--rule);border-radius:3px;background:#fff;width:180px
+  }
+
+  .go{
+    margin-top:18px;width:100%;padding:13px;border:none;border-radius:3px;
+    background:var(--ink);color:var(--paper);font-size:15px;cursor:pointer;
+    font-family:inherit;letter-spacing:.01em;
+  }
+  .go:disabled{opacity:.4;cursor:default}
+
+  /* status */
+  .status{margin-top:18px;font-family:ui-monospace,monospace;font-size:13px;color:var(--muted);min-height:18px}
+  .status.err{color:var(--amber)}
+
+  /* results: the two headline outputs are the hero */
+  .results{margin-top:36px;display:none}
+  .results.show{display:block}
+  .twin{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+  @media(max-width:560px){.twin{grid-template-columns:1fr}}
+  .panel{background:var(--paper);padding:22px}
+  .panel .tag{
+    font-family:ui-monospace,monospace;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:12px
+  }
+  .panel .big{font-size:30px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+  .panel .sub{margin-top:8px;font-size:14px;color:var(--muted)}
+  .panel.accent .big{color:var(--amber)}
+
+  .meta{margin-top:1px;background:var(--rule);border:1px solid var(--rule);border-top:none;border-radius:0 0 4px 4px;padding:16px 22px;display:flex;flex-wrap:wrap;gap:18px}
+  .meta div{font-size:13px}
+  .meta .k{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+  details{margin-top:22px;border-top:1px solid var(--rule);padding-top:14px}
+  summary{font-family:ui-monospace,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+  pre{margin-top:12px;background:#fff;border:1px solid var(--rule);border-radius:3px;padding:16px;overflow:auto;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.55;color:var(--ink)}
+
+  .foot{margin-top:40px;font-family:ui-monospace,monospace;font-size:11px;color:var(--muted);text-align:center;letter-spacing:.04em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Onboarding · statement intake</div>
+  <h1>Statement Reader</h1>
+  <p class="lede">Upload a customer's bank statement. The reader pulls out when they get paid and the safest day to collect a debit order — same result for any bank, CSV or PDF.</p>
+
+  <label class="drop" id="drop">
+    <strong id="dropTitle">Drop a statement here, or click to choose</strong>
+    <span id="dropHint">CSV preferred · PDF accepted</span>
+    <input type="file" id="file" accept=".csv,.pdf" />
+  </label>
+
+  <div class="pw" id="pwRow">
+    <span>PDF locked — enter password</span>
+    <input type="text" id="pw" placeholder="statement password" autocomplete="off" />
+  </div>
+
+  <button class="go" id="go" disabled>Read statement</button>
+  <div class="status" id="status"></div>
+
+  <div class="results" id="results">
+    <div class="twin">
+      <div class="panel">
+        <div class="tag">When income arrives</div>
+        <div class="big" id="oSalary">—</div>
+        <div class="sub" id="oSalarySub"></div>
+      </div>
+      <div class="panel accent">
+        <div class="tag">Best debit-order day</div>
+        <div class="big" id="oDebit">—</div>
+        <div class="sub" id="oDebitSub"></div>
+      </div>
+    </div>
+    <div class="meta">
+      <div><div class="k">Bank</div><span id="mBank">—</span></div>
+      <div><div class="k">Income type</div><span id="mType">—</span></div>
+      <div><div class="k">Frequency</div><span id="mFreq">—</span></div>
+      <div><div class="k">Confidence</div><span id="mConf">—</span></div>
+    </div>
+    <details>
+      <summary>Full data (for the next team)</summary>
+      <pre id="json"></pre>
+    </details>
+  </div>
+
+  <div class="foot">Mistral · keys stay server-side</div>
+</div>
+
+<script>
+  const fileInput = document.getElementById("file");
+  const drop = document.getElementById("drop");
+  const dropTitle = document.getElementById("dropTitle");
+  const dropHint = document.getElementById("dropHint");
+  const go = document.getElementById("go");
+  const statusEl = document.getElementById("status");
+  const results = document.getElementById("results");
+  const pwRow = document.getElementById("pwRow");
+  const pwInput = document.getElementById("pw");
+
+  let chosen = null;
+
+  function setStatus(msg, isErr){ statusEl.textContent = msg; statusEl.classList.toggle("err", !!isErr); }
+
+  fileInput.addEventListener("change", e => pick(e.target.files[0]));
+  ["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
+  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
+  drop.addEventListener("drop", e => pick(e.dataTransfer.files[0]));
+
+  function pick(f){
+    if(!f) return;
+    chosen = f;
+    dropTitle.textContent = f.name;
+    const isPdf = f.name.toLowerCase().endsWith(".pdf");
+    dropHint.textContent = isPdf ? "PDF · will be read with AI" : "CSV · clean import";
+    pwRow.classList.toggle("show", isPdf);
+    go.disabled = false;
+    setStatus("");
+    results.classList.remove("show");
+  }
+
+  function readAsText(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsText(f)})}
+  function readAsBase64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(f)})}
+
+  go.addEventListener("click", async () => {
+    if(!chosen) return;
+    go.disabled = true;
+    const isPdf = chosen.name.toLowerCase().endsWith(".pdf");
+    setStatus(isPdf ? "Reading PDF…" : "Reading CSV…");
+
+    try{
+      const payload = { fileName: chosen.name };
+      if(isPdf){
+        payload.fileType = "pdf";
+        payload.content = await readAsBase64(chosen);
+        payload.password = pwInput.value.trim() || undefined;
+      } else {
+        payload.fileType = "csv";
+        payload.content = await readAsText(chosen);
+      }
+
+      const r = await fetch("/api/parse", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      });
+      const data = await r.json();
+      if(!r.ok){ throw new Error(data.error || "Something went wrong."); }
+
+      render(data.result);
+      setStatus("Done.");
+    }catch(err){
+      setStatus(err.message, true);
+    }finally{
+      go.disabled = false;
+    }
+  });
+
+  function render(d){
+    const inc = d.income || {};
+    // Output 1 — when income arrives
+    if(d.salary_detected){
+      const day = inc.typical_day_of_month;
+      document.getElementById("oSalary").textContent = day ? ("~ day " + day) : (inc.frequency || "detected");
+      document.getElementById("oSalarySub").textContent =
+        (inc.average_amount ? (inc.currency||"") + " " + inc.average_amount.toLocaleString() + " · " : "") +
+        (inc.frequency || "");
+    } else {
+      document.getElementById("oSalary").textContent = "No salary";
+      document.getElementById("oSalarySub").textContent =
+        "Income looks " + (d.income_type || "irregular").replace(/_/g," ") + " — not a regular paycheck.";
+    }
+
+    // Output 2 — best debit-order day
+    const rec = d.recommended_debit_date || {};
+    document.getElementById("oDebit").textContent = rec.day_of_month ? ("day " + rec.day_of_month) : "—";
+    document.getElementById("oDebitSub").textContent = rec.reason || "";
+
+    document.getElementById("mBank").textContent = d.bank || "—";
+    document.getElementById("mType").textContent = (d.income_type||"—").replace(/_/g," ");
+    document.getElementById("mFreq").textContent = inc.frequency || "—";
+    document.getElementById("mConf").textContent = d.confidence || "—";
+
+    document.getElementById("json").textContent = JSON.stringify(d, null, 2);
+    results.classList.add("show");
+    results.scrollIntoView({behavior:"smooth", block:"nearest"});
+  }
+</script>
+</body>
+</html>
