@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title></title>
+<title>Income Check</title>
 <style>
   :root {
     --bg: #f0f4f9;
@@ -345,10 +345,16 @@
       <div class="row"><span class="row-key">Bank</span><span class="row-val" id="sBank">—</span></div>
       <div class="row"><span class="row-key">Account holder</span><span class="row-val" id="sHolder">—</span></div>
       <div class="row"><span class="row-key">Statement period</span><span class="row-val" id="sPeriod">—</span></div>
+      <div class="row"><span class="row-key">Income source</span><span class="row-val" id="sSource">—</span></div>
       <div class="row"><span class="row-key">Income type</span><span class="row-val" id="sType">—</span></div>
       <div class="row"><span class="row-key">Pay frequency</span><span class="row-val" id="sFreq">—</span></div>
       <div class="row"><span class="row-key">Average income</span><span class="row-val" id="sAvg">—</span></div>
-      <div class="row"><span class="row-key">Affordability note</span><span class="row-val" id="sAfford">—</span></div>
+      <div class="row"><span class="row-key">Affordability</span><span class="row-val" id="sAfford">—</span></div>
+    </div>
+
+    <div class="summary" id="debitSection" style="margin-top:14px;display:none">
+      <div class="summary-head">Debit orders</div>
+      <div id="debitList"></div>
     </div>
   </div>
 
@@ -513,10 +519,30 @@
     $("sHolder").textContent = d.account_holder || "—";
     const p = d.statement_period || {};
     $("sPeriod").textContent = (p.from && p.to) ? p.from + " → " + p.to : "—";
+    $("sSource").textContent = d.primary_income_source || "—";
     $("sType").textContent = human(d.income_type);
     $("sFreq").textContent = cap(inc.frequency) || "—";
     $("sAvg").textContent = inc.average_amount ? ccy + " " + fmt(inc.average_amount) : "—";
     $("sAfford").textContent = d.affordability_note || "—";
+
+    // Debit orders
+    const orders = d.debit_orders || [];
+    if (orders.length > 0) {
+      $("debitSection").style.display = "block";
+      $("debitList").innerHTML = orders.map(o => {
+        const statusColor = o.status === "bounced" ? "color:var(--amber)" : "";
+        const dateStr = o.typical_date ? "day " + o.typical_date : "date varies";
+        return `<div class="row">
+          <span class="row-key">${o.description || "Unknown"}<br><small style="font-size:11px">${dateStr}</small></span>
+          <span class="row-val" style="${statusColor}">
+            ${ccy} ${fmt(o.amount)}
+            ${o.status === "bounced" ? '<br><small style="font-size:11px;font-weight:400">bounced</small>' : ""}
+          </span>
+        </div>`;
+      }).join("");
+    } else {
+      $("debitSection").style.display = "none";
+    }
 
     results.classList.add("show");
     results.scrollIntoView({ behavior: "smooth", block: "nearest" });
