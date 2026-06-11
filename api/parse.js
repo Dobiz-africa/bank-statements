@@ -24,32 +24,41 @@ Return ONLY valid JSON (no markdown, no backticks, no commentary) in EXACTLY thi
 
   "salary_detected": true/false,
   "income_type": "salary | irregular_business | grant | mixed | unknown",
+  "primary_income_source": "string — name or description of the likely employer/payer, or null",
   "income": {
-    "pay_dates": ["YYYY-MM-DD", "..."],      // actual dates money came IN that look like income
+    "pay_dates": ["YYYY-MM-DD", "..."],
     "frequency": "monthly | weekly | fortnightly | irregular | unknown",
-    "typical_day_of_month": number or null,   // e.g. 25 if paid around the 25th
+    "typical_day_of_month": number or null,
     "average_amount": number or null,
-    "currency": "string, e.g. ZAR"
+    "currency": "string, e.g. ZAR or BWP"
   },
 
-  "existing_debit_orders": [
-    { "description": "string", "amount": number, "day_of_month": number or null }
+  "debit_orders": [
+    {
+      "description": "string — name of the debit order e.g. Capfin, Capfuneral, DStv",
+      "amount": number,
+      "typical_date": number or null,
+      "status": "active | bounced | unknown"
+    }
   ],
 
   "recommended_debit_date": {
     "day_of_month": number or null,
-    "reason": "string — short plain-English why this day is safest to collect"
+    "reason": "string — plain English explanation"
   },
 
-  "affordability_note": "string — short plain-English read on income stability / risk",
+  "affordability_note": "string — short plain-English read on income stability and ability to afford a new debit order",
   "confidence": "high | medium | low",
-  "notes": "string — anything unusual the next team should know"
+  "notes": "string — anything important the reviewer should know"
 }
 
 Rules:
-- If there is no salary (e.g. a business account with many small irregular deposits),
-  set salary_detected=false and income_type accordingly. Do NOT invent a salary date.
-- Base recommended_debit_date on when money reliably arrives and before it gets spent.
+- For salary detection, IGNORE small misc payments (under R500) from many different people.
+  Focus on LARGE, RECURRING deposits from the SAME source that happen on a similar date each month.
+  Those are salary signals. A payment of R5,000+ from the same company/person appearing monthly = likely salary.
+- List ALL debit orders found — scheduled, DebiCheck, EFT debit orders, card subscriptions.
+  Include ones that bounced (mark status as "bounced") — these still matter.
+- Base recommended_debit_date on when the large income reliably lands, ideally 1-2 days after.
 - Use the statement's own currency.
 `;
 
@@ -101,27 +110,11 @@ export default async function handler(req, res) {
       textForModel = content;
     } else if (fileType === "pdf") {
       // PDF path — extract text (unlocking with password if supplied), then send text.
-      let pdfText;
-      try {
-        pdfText = await extractPdfText(content, password);
-      } catch (e) {
-        const msg = String(e.message || e).toLowerCase();
-        // pdfjs/unpdf signal a password issue via these messages.
-        if (msg.includes("password")) {
-          if (!password) {
-            // No password was given but the PDF needs one → tell the page to ask.
-            return res.status(401).json({ needsPassword: true });
-          }
-          // A password was given but it was wrong.
-          return res.status(401).json({ needsPassword: true, wrongPassword: true });
-        }
-        throw e;
-      }
-
+      const pdfText = await extractPdfText(content, password);
       if (!pdfText || pdfText.trim().length < 20) {
         return res.status(422).json({
           error:
-            "Couldn't read any text from this PDF — it may be a scanned image rather than a digital statement. Please upload the statement downloaded directly from the banking app, or a CSV.",
+            "Could not read text from this PDF. It may be a scanned image. Ask the client to download the PDF directly from their banking app, or upload the CSV instead.",
         });
       }
       textForModel = pdfText;
@@ -160,16 +153,23 @@ export default async function handler(req, res) {
 }
 
 // --- PDF text extraction with optional password unlock ---
-// Uses unpdf — built for serverless/Node, no worker setup, handles
-// both locked and unlocked PDFs. Throws an error containing "password"
-// when the PDF is encrypted and the password is missing or wrong.
+// Uses pdfjs-dist (pure JS, works in Vercel's Node runtime).
 async function extractPdfText(base64, password) {
-  const { extractText, getDocumentProxy } = await import("unpdf");
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const data = Buffer.from(base64, "base64");
 
-  const pdf = await getDocumentProxy(new Uint8Array(data), {
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(data),
     password: password || undefined,
+    useSystemFonts: true,
   });
-  const { text } = await extractText(pdf, { mergePages: true });
-  return text;
+
+  const pdf = await loadingTask.promise;
+  let out = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const tc = await page.getTextContent();
+    out += tc.items.map((it) => it.str).join(" ") + "\n";
+  }
+  return out;
 }
