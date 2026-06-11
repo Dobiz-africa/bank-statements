@@ -153,23 +153,14 @@ export default async function handler(req, res) {
 }
 
 // --- PDF text extraction with optional password unlock ---
-// Uses pdfjs-dist (pure JS, works in Vercel's Node runtime).
+// Uses unpdf — serverless-safe, no worker required, handles locked and unlocked PDFs.
 async function extractPdfText(base64, password) {
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const { extractText, getDocumentProxy } = await import("unpdf");
   const data = Buffer.from(base64, "base64");
 
-  const loadingTask = pdfjsLib.getDocument({
-    data: new Uint8Array(data),
+  const pdf = await getDocumentProxy(new Uint8Array(data), {
     password: password || undefined,
-    useSystemFonts: true,
   });
-
-  const pdf = await loadingTask.promise;
-  let out = "";
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const tc = await page.getTextContent();
-    out += tc.items.map((it) => it.str).join(" ") + "\n";
-  }
-  return out;
+  const { text } = await extractText(pdf, { mergePages: true });
+  return text;
 }
