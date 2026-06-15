@@ -53,12 +53,12 @@ Return ONLY valid JSON (no markdown, no backticks, no commentary) in EXACTLY thi
 }
 
 Rules:
-- For salary detection, IGNORE small misc payments (under R500) from many different people.
-  Focus on LARGE, RECURRING deposits from the SAME source that happen on a similar date each month.
-  Those are salary signals. A payment of R5,000+ from the same company/person appearing monthly = likely salary.
-- List ALL debit orders found — scheduled, DebiCheck, EFT debit orders, card subscriptions.
-  Include ones that bounced (mark status as "bounced") — these still matter.
-- Base recommended_debit_date on when the large income reliably lands, ideally 1-2 days after.
+- PRIMARY INCOME: Look for any company or person that sends money R2,000+ at least TWICE in the statement period. That source IS the primary income, even if amounts vary month to month and even if the money gets transferred out shortly after. The fact that money comes in from the same source repeatedly = income.
+- If Ownisha Network, an employer, a company, or any single entity sends large amounts (R2,000+) 2 or more times → salary_detected=true, income_type="salary", set primary_income_source to that entity name.
+- Calculate average_amount from those recurring deposits only. Set typical_day_of_month to the most common day those deposits arrive.
+- IGNORE: small misc payments under R500 from many different people, internal transfers between the person's own accounts, refunds.
+- List ALL debit orders — DebiCheck, EFT, scheduled payments, card subscriptions. Mark bounced ones as "bounced".
+- Base recommended_debit_date on 1-2 days AFTER the typical income arrival day.
 - Use the statement's own currency.
 `;
 
@@ -70,7 +70,7 @@ async function callMistral(messages) {
       Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "mistral-small-latest", // cheap + good enough for extraction; swap to mistral-large-latest if needed
+      model: "mistral-large-latest", // large model for better income pattern detection
       messages,
       temperature: 0,
       response_format: { type: "json_object" },
