@@ -117,6 +117,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-he
 .rule-box{background:var(--gold-lt);border:1px solid #fcd34d;border-radius:9px;padding:.85rem 1rem;font-size:.82rem;color:#78350f;margin-top:.75rem}
 .rule-box strong{display:block;margin-bottom:.3rem;font-size:.85rem}
 
+.bk-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem .75rem;background:var(--bg);border-radius:8px;font-size:.82rem}
+.bk-row:nth-child(even){background:#f8fafc}
+.bk-amt{font-weight:700;color:var(--ink)}
+
 /* print */
 .btn-print{display:block;width:100%;padding:.75rem;border:1.5px solid var(--border);border-radius:11px;font-size:.9rem;font-weight:600;cursor:pointer;background:#fff;color:var(--ink);margin-top:.75rem;transition:.15s}
 .btn-print:hover{background:var(--bg)}
@@ -250,6 +254,12 @@ footer{text-align:center;padding:1.25rem;font-size:.72rem;color:var(--muted);bor
   <div class="total-row">
     <span>Total Monthly Expenses</span>
     <strong id="totalExp">R 0.00</strong>
+  </div>
+
+  <!-- spending breakdown from statement -->
+  <div id="breakdownSection" class="hidden" style="margin-top:1rem">
+    <div class="card-hd">📊 Spending Breakdown (from statement) <span class="badge">Monthly averages</span></div>
+    <div id="breakdownList" style="display:grid;gap:.4rem"></div>
   </div>
 
   <!-- notes from statement -->
@@ -464,10 +474,36 @@ function autofill() {
   const orders = d.debit_orders || [];
   const active = orders.filter(o => o.status !== 'bounced');
   const totalDO = active.reduce((s, o) => s + (o.amount || 0), 0);
-  if (totalDO > 0) {
-    $('debtRepay').value = totalDO.toFixed(2);
-    $('debtHint').textContent = active.length + ' active debit order(s) from statement';
+
+  // expense auto-fill from spending categories
+  const me = d.monthly_expenses || {};
+  if (me.rent_bond)       { $('rent').value      = me.rent_bond.toFixed(2);       tag2('rent'); }
+  if (me.transport)       { $('transport').value  = me.transport.toFixed(2);       tag2('transport'); }
+  if (me.food_groceries)  { $('groceries').value  = me.food_groceries.toFixed(2);  tag2('groceries'); }
+  if (me.utilities)       { $('utilities').value  = me.utilities.toFixed(2);       tag2('utilities'); }
+  if (me.other)           { $('otherExp').value   = me.other.toFixed(2);           tag2('otherExp'); }
+
+  // debt repayments: use AI's figure if available, otherwise fall back to debit orders sum
+  const debtVal = me.debt_repayments || totalDO;
+  if (debtVal > 0) {
+    $('debtRepay').value = debtVal.toFixed(2);
+    $('debtHint').textContent = me.debt_repayments
+      ? 'From statement (loan payments + debit orders)'
+      : active.length + ' active debit order(s) from statement';
     tag('debtSrc');
+  }
+
+  // spending breakdown section
+  const breakdown = me.spending_breakdown || [];
+  if (breakdown.length > 0) {
+    $('breakdownSection').classList.remove('hidden');
+    $('breakdownList').innerHTML = breakdown
+      .sort((a, b) => b.monthly_amount - a.monthly_amount)
+      .map(item => `
+        <div class="bk-row">
+          <span>${item.category}</span>
+          <span class="bk-amt">R ${item.monthly_amount.toLocaleString('en-ZA', {minimumFractionDigits:2, maximumFractionDigits:2})}/mo</span>
+        </div>`).join('');
   }
 
   // statement provided
@@ -483,6 +519,13 @@ function autofill() {
 
 function tag(id) {
   $( id).innerHTML = '<span class="auto-tag">auto</span>';
+}
+function tag2(fieldId) {
+  // For expense inputs, add a small auto label next to the input
+  const input = $(fieldId);
+  if (!input) return;
+  input.style.borderColor = 'var(--ok)';
+  input.style.background  = '#f0fff4';
 }
 function showForm() {
   $('secForm').classList.remove('hidden');
@@ -621,7 +664,13 @@ function resetAll() {
   setUpStatus('');
   ['clientName','accountNo','bankName','monthlyIncome','payDate','debitDay'].forEach(id => $( id).value = '');
   ['nameSrc','accSrc','bankSrc','incSrc','paySrc','debtSrc','debitDaySrc'].forEach(id => $( id).innerHTML = '');
-  expFields.forEach(id => $( id).value = '0');
+  expFields.forEach(id => {
+    $(id).value = '0';
+    $(id).style.borderColor = '';
+    $(id).style.background = '';
+  });
+  $('breakdownSection').classList.add('hidden');
+  $('breakdownList').innerHTML = '';
   $('stmtProvided').value = 'Yes';
   $('stmtNotes').textContent = '';
   $('notesSection').classList.add('hidden');
