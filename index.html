@@ -506,6 +506,9 @@ function autofill() {
         </div>`).join('');
   }
 
+  // recalculate total after all fields are filled
+  updateTotal();
+
   // statement provided
   $('stmtProvided').value = 'Yes';
 
