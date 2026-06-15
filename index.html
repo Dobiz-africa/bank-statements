@@ -1,417 +1,565 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Income Check</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Loan Qualifier</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
   :root {
-    --bg: #f0f4f9;
-    --surface: #ffffff;
-    --border: #dde3ec;
-    --ink: #131b27;
-    --body: #414d5e;
-    --subtle: #7d8fa3;
-    --blue: #1c57d4;
-    --blue-tint: #eef3fc;
-    --green: #0f7a4c;
-    --green-tint: #e4f4ed;
-    --amber: #8f5900;
-    --amber-tint: #fef4e0;
-    --radius: 16px;
-    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 32px rgba(0,0,0,.07);
+    --green-dark: #0d2b1f;
+    --green-mid:  #1a4a32;
+    --gold:       #c9a84c;
+    --gold-soft:  #fdf6e3;
+    --red:        #c53030;
+    --red-soft:   #fff5f5;
+    --green-ok:   #276749;
+    --green-soft: #f0fff4;
+    --amber:      #9a5b00;
+    --amber-soft: #fffbeb;
+    --border:     #e2e8f0;
+    --surface:    #ffffff;
+    --bg:         #f5f7fa;
+    --ink:        #1a2a3a;
+    --muted:      #718096;
+    --radius:     16px;
+    --shadow:     0 4px 6px rgba(0,0,0,.05), 0 10px 30px rgba(0,0,0,.08);
   }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
+    font-family: 'Inter', sans-serif;
     background: var(--bg);
     color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
     min-height: 100vh;
-  }
-
-  /* ── Layout ── */
-  .page {
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 48px 20px 80px;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ── Header ── */
-  .brand {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--blue);
-    margin-bottom: 14px;
+  .header {
+    background: linear-gradient(135deg, var(--green-dark), var(--green-mid));
+    padding: 2rem 1.5rem;
+    text-align: center;
+    color: white;
   }
-  h1 {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    margin-bottom: 10px;
+  .header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: .4rem; }
+  .header h1 span { color: var(--gold); }
+  .header p { opacity: .8; font-size: .95rem; max-width: 500px; margin: 0 auto; }
+
+  /* ── Layout ── */
+  .page { max-width: 800px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+
+  /* ── Steps indicator ── */
+  .steps {
+    display: flex; align-items: center; justify-content: center;
+    gap: .5rem; margin-bottom: 2rem; flex-wrap: wrap;
   }
-  .intro {
-    color: var(--body);
-    font-size: 15.5px;
-    max-width: 44ch;
-    line-height: 1.6;
-    margin-bottom: 36px;
+  .step-dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; font-weight: 700;
+    background: var(--border); color: var(--muted);
+    transition: all .3s;
+  }
+  .step-dot.active { background: var(--gold); color: var(--green-dark); }
+  .step-dot.done   { background: var(--green-ok); color: white; }
+  .step-line { flex: 1; max-width: 60px; height: 2px; background: var(--border); }
+  .step-line.done { background: var(--green-ok); }
+  .step-label { font-size: .75rem; color: var(--muted); text-align: center; margin-top: .25rem; }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .card-title {
+    font-size: 1rem; font-weight: 700; color: var(--ink);
+    margin-bottom: 1.25rem; padding-bottom: .75rem;
+    border-bottom: 2px solid var(--border);
+    display: flex; align-items: center; gap: .5rem;
   }
 
   /* ── Upload zone ── */
   .uploader {
-    background: var(--surface);
-    border: 1.5px dashed var(--border);
+    border: 2px dashed var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    transition: border-color .2s, background .2s;
-    cursor: pointer;
-    position: relative;
-  }
-  .uploader:hover, .uploader.over {
-    border-color: var(--blue);
-    background: var(--blue-tint);
-  }
-  .uploader input { display: none; }
-
-  .drop-zone {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 28px;
-    gap: 10px;
+    padding: 2.5rem 1.5rem;
     text-align: center;
-  }
-  .drop-icon {
-    width: 48px; height: 48px;
-    background: var(--blue-tint);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--blue);
-    margin-bottom: 4px;
-  }
-  .drop-icon svg { width: 22px; height: 22px; }
-  .drop-label {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--ink);
-  }
-  .drop-sub {
-    font-size: 13.5px;
-    color: var(--subtle);
-  }
-  .drop-btn {
-    display: inline-block;
-    margin-top: 6px;
-    padding: 10px 28px;
-    background: var(--blue);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: 10px;
     cursor: pointer;
+    transition: all .2s;
+    background: var(--surface);
+  }
+  .uploader:hover, .uploader.over { border-color: var(--gold); background: var(--gold-soft); }
+  .uploader input { display: none; }
+  .up-icon {
+    width: 52px; height: 52px; background: var(--gold-soft);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem; color: var(--gold);
+  }
+  .up-icon svg { width: 24px; height: 24px; }
+  .up-title { font-size: 1rem; font-weight: 600; margin-bottom: .4rem; }
+  .up-sub { font-size: .85rem; color: var(--muted); margin-bottom: 1rem; }
+  .up-btn {
+    display: inline-block; padding: .65rem 1.75rem;
+    background: var(--green-dark); color: white;
+    border-radius: 10px; font-size: .9rem; font-weight: 600;
     transition: opacity .15s;
   }
-  .drop-btn:hover { opacity: .88; }
-
-  /* ── File chosen bar ── */
+  .up-btn:hover { opacity: .85; }
   .file-bar {
-    display: none;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    border-top: 1px solid var(--border);
-    background: #fafbfc;
-    border-radius: 0 0 var(--radius) var(--radius);
+    display: none; align-items: center; gap: .75rem;
+    padding: .75rem 1rem; margin-top: 1rem;
+    background: var(--bg); border-radius: 10px;
   }
   .file-bar.show { display: flex; }
-  .file-tag {
-    font-size: 11px; font-weight: 700; letter-spacing: .04em;
-    text-transform: uppercase; padding: 4px 9px; border-radius: 6px;
-    background: var(--blue-tint); color: var(--blue);
-    flex-shrink: 0;
+  .file-badge {
+    font-size: .7rem; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 5px;
+    background: #e6f0ff; color: #1c57d4; flex-shrink: 0;
   }
-  .file-name {
-    flex: 1; font-size: 13.5px; color: var(--ink);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .file-remove {
-    background: none; border: none; color: var(--subtle);
-    font-size: 13px; cursor: pointer; text-decoration: underline;
-    flex-shrink: 0;
-  }
+  .file-name { flex: 1; font-size: .85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .8rem; text-decoration: underline; }
 
-  /* ── Submit ── */
-  .btn-submit {
-    margin-top: 14px;
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 12px;
-    background: var(--blue);
-    color: #fff;
-    font-size: 15.5px;
-    font-weight: 600;
-    cursor: pointer;
-    letter-spacing: -.01em;
-    transition: opacity .15s, transform .08s;
+  /* ── Buttons ── */
+  .btn {
+    width: 100%; padding: .9rem; border: none; border-radius: 12px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: all .2s; margin-top: 1rem;
   }
-  .btn-submit:hover { opacity: .9; }
-  .btn-submit:active { transform: scale(.99); }
-  .btn-submit:disabled { background: #b4bfcc; cursor: not-allowed; }
+  .btn-primary { background: var(--green-dark); color: white; }
+  .btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+  .btn-primary:disabled { background: #b4bfcc; transform: none; cursor: not-allowed; }
+  .btn-gold { background: var(--gold); color: var(--green-dark); }
+  .btn-gold:hover { background: #b89438; transform: translateY(-1px); }
 
   /* ── Status ── */
   .status {
-    min-height: 22px;
-    margin-top: 14px;
-    text-align: center;
-    font-size: 14px;
-    color: var(--subtle);
+    min-height: 20px; text-align: center; font-size: .875rem;
+    color: var(--muted); margin-top: .75rem;
   }
-  .status.error { color: var(--amber); }
+  .status.error { color: var(--red); }
   .spin {
     display: inline-block; width: 14px; height: 14px;
-    border: 2px solid var(--border); border-top-color: var(--blue);
+    border: 2px solid var(--border); border-top-color: var(--gold);
     border-radius: 50%; animation: spin .65s linear infinite;
-    vertical-align: -2px; margin-right: 8px;
+    vertical-align: -2px; margin-right: 7px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Results ── */
-  .results { margin-top: 32px; display: none; }
-  .results.show { display: block; animation: up .35s ease; }
-  @keyframes up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  /* ── Profile cards ── */
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  @media (max-width: 520px) { .profile-grid { grid-template-columns: 1fr; } }
 
-  .results-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 14px;
-  }
-  @media (max-width: 520px) { .results-grid { grid-template-columns: 1fr; } }
-
-  .card {
-    background: var(--surface);
+  .stat-card {
+    background: var(--bg); border-radius: 12px; padding: 1rem 1.25rem;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px 20px;
-    box-shadow: var(--shadow);
   }
-  .card-eyebrow {
-    display: flex; align-items: center; gap: 7px;
-    font-size: 11.5px; font-weight: 700; letter-spacing: .04em;
-    text-transform: uppercase; color: var(--subtle);
-    margin-bottom: 14px;
-  }
-  .card-eyebrow .dot {
-    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
-  }
-  .card.income .dot { background: var(--green); }
-  .card.debit  .dot { background: var(--blue); }
+  .stat-label { font-size: .75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .4rem; }
+  .stat-value { font-size: 1.4rem; font-weight: 800; letter-spacing: -.02em; }
+  .stat-sub { font-size: .8rem; color: var(--muted); margin-top: .2rem; }
 
-  .card-value {
-    font-size: 24px; font-weight: 700; letter-spacing: -.02em;
-    line-height: 1.15; margin-bottom: 9px;
+  .income-edit {
+    display: flex; align-items: center; gap: .5rem; margin-top: .5rem;
   }
-  .card-note { font-size: 14px; color: var(--body); line-height: 1.5; }
-  .badge {
-    display: inline-block; margin-top: 12px;
-    font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+  .income-edit input {
+    flex: 1; padding: .45rem .75rem; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: .9rem; font-family: inherit;
   }
-  .badge.good { background: var(--green-tint); color: var(--green); }
-  .badge.warn { background: var(--amber-tint); color: var(--amber); }
+  .income-edit input:focus { outline: none; border-color: var(--gold); }
+  .income-edit button {
+    padding: .45rem .9rem; border: none; border-radius: 8px;
+    background: var(--green-dark); color: white; font-size: .8rem;
+    font-weight: 600; cursor: pointer;
+  }
 
-  /* ── Summary table ── */
-  .summary {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
+  /* ── Debit orders table ── */
+  .debit-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+  .debit-table th {
+    text-align: left; padding: .5rem .75rem;
+    font-size: .7rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .04em;
+    border-bottom: 2px solid var(--border);
   }
-  .summary-head {
-    font-size: 12px; font-weight: 700; letter-spacing: .04em;
-    text-transform: uppercase; color: var(--subtle);
-    padding: 16px 20px 12px;
-    border-bottom: 1px solid var(--border);
+  .debit-table td { padding: .65rem .75rem; border-bottom: 1px solid var(--border); }
+  .debit-table tr:last-child td { border-bottom: none; }
+  .tag {
+    display: inline-block; font-size: .7rem; font-weight: 700;
+    padding: 2px 7px; border-radius: 20px;
   }
-  .row {
-    display: flex; justify-content: space-between; align-items: baseline;
-    gap: 16px; padding: 12px 20px;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
+  .tag-active { background: var(--green-soft); color: var(--green-ok); }
+  .tag-bounced { background: var(--red-soft); color: var(--red); }
+  .debit-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .75rem; background: var(--bg); border-radius: 10px;
+    margin-top: .75rem; font-weight: 700;
   }
-  .row:last-child { border-bottom: none; }
-  .row-key { color: var(--subtle); flex-shrink: 0; }
-  .row-val { font-weight: 600; text-align: right; }
 
-  /* ── Footer ── */
-  footer {
-    margin-top: 36px; text-align: center;
-    font-size: 12.5px; color: var(--subtle);
+  /* ── Loan form ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-group { display: flex; flex-direction: column; gap: .4rem; }
+  .form-group label { font-size: .85rem; font-weight: 600; color: #2d3748; }
+  .form-group select, .form-group input {
+    padding: .7rem .9rem; border: 2px solid var(--border);
+    border-radius: 10px; font-size: .95rem; font-family: inherit;
+    background: white; transition: border-color .2s;
   }
+  .form-group select:focus, .form-group input:focus {
+    outline: none; border-color: var(--gold);
+  }
+  .help { font-size: .72rem; color: var(--muted); }
+
+  /* ── Result ── */
+  .result-hero {
+    text-align: center; padding: 2rem 1rem;
+    border-radius: var(--radius); margin-bottom: 1.25rem;
+  }
+  .result-hero.approved {
+    background: linear-gradient(135deg, var(--green-dark), var(--green-mid));
+    color: white;
+  }
+  .result-hero.declined {
+    background: linear-gradient(135deg, #742a2a, #c53030);
+    color: white;
+  }
+  .result-hero .verdict { font-size: .85rem; font-weight: 600; opacity: .85; margin-bottom: .5rem; }
+  .result-hero .amount { font-size: 2.5rem; font-weight: 800; letter-spacing: -.03em; margin-bottom: .5rem; }
+  .result-hero .amount span { color: var(--gold); }
+  .result-hero .sub { font-size: .9rem; opacity: .8; }
+
+  .breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 520px) { .breakdown { grid-template-columns: 1fr; } }
+  .bk-item { background: var(--bg); border-radius: 10px; padding: .9rem 1rem; border: 1px solid var(--border); }
+  .bk-label { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .3rem; }
+  .bk-value { font-size: 1.1rem; font-weight: 700; }
+
+  .risk-bar-wrap { margin: 1rem 0 .5rem; }
+  .risk-bar-bg { height: 10px; background: var(--border); border-radius: 10px; overflow: hidden; }
+  .risk-bar-fill { height: 100%; border-radius: 10px; transition: width .5s ease; }
+
+  .doc-list { list-style: none; }
+  .doc-list li {
+    padding: .5rem 0; display: flex; align-items: center; gap: .6rem;
+    font-size: .875rem; border-bottom: 1px solid var(--border);
+  }
+  .doc-list li:last-child { border-bottom: none; }
+  .doc-list li::before { content: "📄"; }
 
   /* ── Modal ── */
   .overlay {
-    position: fixed; inset: 0;
-    background: rgba(10, 20, 40, .48);
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
     display: none; align-items: center; justify-content: center;
-    padding: 20px; z-index: 100;
+    padding: 1.25rem; z-index: 100;
   }
   .overlay.show { display: flex; }
   .modal {
-    background: var(--surface);
-    border-radius: 20px;
-    padding: 28px 24px;
+    background: white; border-radius: 20px; padding: 1.75rem;
     max-width: 360px; width: 100%;
     box-shadow: 0 24px 80px rgba(0,0,0,.25);
-    animation: up .2s ease;
   }
-  .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
-  .modal p { font-size: 14px; color: var(--body); margin-bottom: 18px; line-height: 1.55; }
+  .modal h3 { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; }
+  .modal p { font-size: .875rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.55; }
   .modal input {
-    width: 100%; padding: 13px 14px;
-    border: 1.5px solid var(--border); border-radius: 11px;
-    font-size: 15px; color: var(--ink);
-    margin-bottom: 8px; outline: none;
-    transition: border-color .15s;
+    width: 100%; padding: .75rem; border: 1.5px solid var(--border);
+    border-radius: 10px; font-size: .95rem; margin-bottom: .5rem;
   }
-  .modal input:focus { border-color: var(--blue); }
-  .modal-warn { font-size: 13px; color: var(--amber); min-height: 18px; margin-bottom: 14px; }
-  .modal-btns { display: flex; gap: 10px; }
+  .modal input:focus { outline: none; border-color: var(--gold); }
+  .modal-warn { font-size: .8rem; color: var(--red); min-height: 18px; margin-bottom: .75rem; }
+  .modal-btns { display: flex; gap: .75rem; }
   .modal-btns button {
-    flex: 1; padding: 12px; border-radius: 11px; font-size: 14px;
+    flex: 1; padding: .75rem; border-radius: 10px; font-size: .875rem;
     font-weight: 600; cursor: pointer; border: 1.5px solid var(--border);
-    background: var(--surface); color: var(--ink);
+    background: white; color: var(--ink);
   }
-  .modal-btns .primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .modal-btns .mprimary { background: var(--green-dark); color: white; border-color: var(--green-dark); }
+
+  footer {
+    text-align: center; padding: 1.5rem; color: var(--muted);
+    font-size: .75rem; border-top: 1px solid var(--border); margin-top: 1rem;
+  }
+
+  .hidden { display: none !important; }
+  .notice {
+    background: var(--amber-soft); border: 1px solid #fcd34d;
+    border-radius: 10px; padding: .75rem 1rem;
+    font-size: .85rem; color: var(--amber); margin-bottom: 1rem;
+  }
 </style>
 </head>
 <body>
+
+<div class="header">
+  <h1>Loan <span>Qualifier</span></h1>
+  <p>Upload your bank statement and find out how much you qualify for.</p>
+</div>
+
 <div class="page">
 
-  <div class="brand">Financial onboarding</div>
-  <h1>Check your bank statement</h1>
-  <p class="intro">Upload your latest bank statement and we'll identify when your income comes in and the right day to set up your debit order.</p>
-
-  <label class="uploader" id="uploader">
-    <div class="drop-zone">
-      <div class="drop-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
-      </div>
-      <span class="drop-label" id="dropLabel">Upload your statement</span>
-      <span class="drop-sub">CSV or PDF &nbsp;·&nbsp; Any bank</span>
-      <span class="drop-btn" id="chooseBtn">Choose file</span>
+  <!-- Step indicator -->
+  <div class="steps" id="stepBar">
+    <div>
+      <div class="step-dot active" id="sd1">1</div>
+      <div class="step-label">Statement</div>
     </div>
-    <div class="file-bar" id="fileBar">
-      <span class="file-tag" id="fileTag">PDF</span>
-      <span class="file-name" id="fileName"></span>
-      <button class="file-remove" id="fileRemove" type="button">Remove</button>
+    <div class="step-line" id="sl1"></div>
+    <div>
+      <div class="step-dot" id="sd2">2</div>
+      <div class="step-label">Your Profile</div>
     </div>
-    <input type="file" id="fileInput" accept=".csv,.pdf" />
-  </label>
-
-  <button class="btn-submit" id="submitBtn" disabled>Analyse statement</button>
-  <div class="status" id="status"></div>
-
-  <div class="results" id="results">
-    <div class="results-grid">
-      <div class="card income">
-        <div class="card-eyebrow"><span class="dot"></span>Income timing</div>
-        <div class="card-value" id="rIncome">—</div>
-        <div class="card-note" id="rIncomeNote"></div>
-        <span class="badge" id="rBadge" style="display:none"></span>
-      </div>
-      <div class="card debit">
-        <div class="card-eyebrow"><span class="dot"></span>Recommended debit day</div>
-        <div class="card-value" id="rDebit">—</div>
-        <div class="card-note" id="rDebitNote"></div>
-      </div>
-    </div>
-
-    <div class="summary">
-      <div class="summary-head">Statement summary</div>
-      <div class="row"><span class="row-key">Bank</span><span class="row-val" id="sBank">—</span></div>
-      <div class="row"><span class="row-key">Account holder</span><span class="row-val" id="sHolder">—</span></div>
-      <div class="row"><span class="row-key">Statement period</span><span class="row-val" id="sPeriod">—</span></div>
-      <div class="row"><span class="row-key">Income source</span><span class="row-val" id="sSource">—</span></div>
-      <div class="row"><span class="row-key">Income type</span><span class="row-val" id="sType">—</span></div>
-      <div class="row"><span class="row-key">Pay frequency</span><span class="row-val" id="sFreq">—</span></div>
-      <div class="row"><span class="row-key">Average income</span><span class="row-val" id="sAvg">—</span></div>
-      <div class="row"><span class="row-key">Affordability</span><span class="row-val" id="sAfford">—</span></div>
-    </div>
-
-    <div class="summary" id="debitSection" style="margin-top:14px;display:none">
-      <div class="summary-head">Debit orders</div>
-      <div id="debitList"></div>
+    <div class="step-line" id="sl2"></div>
+    <div>
+      <div class="step-dot" id="sd3">3</div>
+      <div class="step-label">Result</div>
     </div>
   </div>
 
-  <footer>Your statement is analysed securely and not stored.</footer>
+  <!-- ══ STEP 1: UPLOAD ══ -->
+  <div id="stepUpload">
+    <div class="card">
+      <div class="card-title">📂 Upload Your Bank Statement</div>
+      <label class="uploader" id="uploader">
+        <div class="up-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="up-title" id="upTitle">Upload your statement</div>
+        <div class="up-sub">PDF or CSV · Any bank · Up to 15MB</div>
+        <span class="up-btn" id="upBtn">Choose file</span>
+        <input type="file" id="fileInput" accept=".csv,.pdf"/>
+      </label>
+      <div class="file-bar" id="fileBar">
+        <span class="file-badge" id="fileBadge">PDF</span>
+        <span class="file-name" id="fileName"></span>
+        <button class="file-remove" id="fileRemove" type="button">Remove</button>
+      </div>
+      <button class="btn btn-primary" id="submitBtn" disabled>Analyse my statement</button>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2: PROFILE + LOAN FORM ══ -->
+  <div id="stepProfile" class="hidden">
+
+    <div class="card">
+      <div class="card-title">📊 Your Financial Profile</div>
+      <div id="noSalaryNotice" class="notice hidden">
+        ⚠️ We couldn't detect a regular salary from this statement. Please confirm your monthly income below before continuing.
+      </div>
+
+      <div class="profile-grid">
+        <div class="stat-card">
+          <div class="stat-label">Monthly Income</div>
+          <div class="stat-value" id="pIncome">—</div>
+          <div class="stat-sub" id="pIncomeSource">—</div>
+          <div class="income-edit" id="incomeEdit">
+            <input type="number" id="incomeOverride" placeholder="Enter amount"/>
+            <button onclick="applyIncomeOverride()">Update</button>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pay Date</div>
+          <div class="stat-value" id="pPayday">—</div>
+          <div class="stat-sub" id="pFreq">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Monthly Commitments</div>
+          <div class="stat-value" id="pDebits">—</div>
+          <div class="stat-sub">Active debit orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Available Income</div>
+          <div class="stat-value" id="pAvailable">—</div>
+          <div class="stat-sub">After all commitments</div>
+        </div>
+      </div>
+
+      <!-- Debit orders -->
+      <div id="debitSection" class="hidden">
+        <div style="font-size:.85rem;font-weight:700;margin-bottom:.75rem;color:var(--ink)">Debit Orders &amp; Commitments</div>
+        <table class="debit-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Day</th>
+              <th style="text-align:right">Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="debitBody"></tbody>
+        </table>
+        <div class="debit-total">
+          <span>Total monthly commitments</span>
+          <span id="debitTotal">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loan request form -->
+    <div class="card">
+      <div class="card-title">🏦 Loan Request</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Loan Type</label>
+          <select id="loanType">
+            <option value="Personal Loan">Personal Loan</option>
+            <option value="Business Loan">Business Loan</option>
+            <option value="Home Loan">Home Loan</option>
+            <option value="Vehicle Loan">Vehicle Loan</option>
+            <option value="Education Loan">Education Loan</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Repayment Period</label>
+          <select id="loanTerm">
+            <option value="3">3 months</option>
+            <option value="6">6 months</option>
+            <option value="12" selected>12 months</option>
+            <option value="24">24 months</option>
+            <option value="36">36 months</option>
+            <option value="48">48 months</option>
+            <option value="60">60 months</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>How much do you need?</label>
+          <input type="number" id="loanAmount" placeholder="e.g. 10000" min="500"/>
+          <span class="help">Leave blank to see maximum you qualify for</span>
+        </div>
+        <div class="form-group">
+          <label>Interest Rate (% per year)</label>
+          <input type="number" id="interestRate" value="20" min="1" max="60"/>
+          <span class="help">Set by your lender</span>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="calculateQualification()">Calculate My Qualification →</button>
+    </div>
+
+  </div>
+
+  <!-- ══ STEP 3: RESULT ══ -->
+  <div id="stepResult" class="hidden">
+
+    <div id="resultHero" class="result-hero approved">
+      <div class="verdict" id="rVerdict">Based on your bank statement</div>
+      <div class="amount" id="rAmount">—</div>
+      <div class="sub" id="rSub">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 Breakdown</div>
+      <div class="breakdown">
+        <div class="bk-item">
+          <div class="bk-label">Monthly Income</div>
+          <div class="bk-value" id="bIncome">—</div>
+        </div>
+        <div class="bk-item">
+          <div class="bk-label">Existing Commitments</div>
+          <div class="bk-value" id="bDebits">—</div>
+        </div>
+        <div class="bk-item">
+          <div class="bk-label">Available for Loan</div>
+          <div class="bk-value" id="bAvail">—</div>
+        </div>
+        <div class="bk-item">
+          <div class="bk-label">Monthly Repayment</div>
+          <div class="bk-value" id="bPayment">—</div>
+        </div>
+        <div class="bk-item">
+          <div class="bk-label">Best Debit Date</div>
+          <div class="bk-value" id="bDebitDate">—</div>
+        </div>
+        <div class="bk-item">
+          <div class="bk-label">Debt-to-Income Ratio</div>
+          <div class="bk-value" id="bDTI">—</div>
+        </div>
+      </div>
+
+      <!-- Risk bar -->
+      <div class="risk-bar-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-bottom:.4rem">
+          <span>Low risk</span>
+          <span id="bRiskLabel">—</span>
+          <span>High risk</span>
+        </div>
+        <div class="risk-bar-bg">
+          <div class="risk-bar-fill" id="riskBar" style="width:0%;background:#38a169"></div>
+        </div>
+      </div>
+
+      <div style="font-size:.85rem;color:var(--muted);margin-top:.75rem" id="bAfford">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📄 Documents to Prepare</div>
+      <ul class="doc-list" id="docList"></ul>
+    </div>
+
+    <button class="btn btn-primary" onclick="restart()">← Check Another Statement</button>
+  </div>
+
 </div>
+
+<footer>Statements are analysed securely and not stored. Results are estimates based on your bank statement data.</footer>
 
 <!-- Password modal -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <h3>Statement is password protected</h3>
-    <p>Enter the password set by your bank to open this statement. This is usually your ID number or date of birth.</p>
-    <input type="text" id="modalPw" placeholder="Enter password" autocomplete="off" />
+    <p>Enter the password your bank set on this PDF. This is usually your ID number or date of birth.</p>
+    <input type="text" id="modalPw" placeholder="Enter password" autocomplete="off"/>
     <div class="modal-warn" id="modalWarn"></div>
     <div class="modal-btns">
       <button id="modalCancel">Cancel</button>
-      <button class="primary" id="modalUnlock">Open &amp; analyse</button>
+      <button class="mprimary" id="modalUnlock">Unlock &amp; analyse</button>
     </div>
   </div>
 </div>
 
 <script>
+  // ── State ──
+  let parserResult = null;
+  let confirmedIncome = 0;
+  let file = null;
+  let cachedB64 = null;
+
+  // ── DOM refs ──
   const $ = id => document.getElementById(id);
   const uploader = $("uploader"), fileInput = $("fileInput");
-  const dropLabel = $("dropLabel"), fileBar = $("fileBar");
-  const fileTag = $("fileTag"), fileName = $("fileName"), fileRemove = $("fileRemove");
-  const submitBtn = $("submitBtn"), statusEl = $("status"), results = $("results");
+  const fileBar = $("fileBar"), fileBadge = $("fileBadge");
+  const fileName = $("fileName"), fileRemove = $("fileRemove");
+  const submitBtn = $("submitBtn"), statusEl = $("status");
   const overlay = $("overlay"), modalPw = $("modalPw"), modalWarn = $("modalWarn");
 
-  let currentFile = null, cachedB64 = null;
-
-  // Drag & drop
+  // ── Upload interactions ──
+  $("upBtn").addEventListener("click", e => { e.preventDefault(); fileInput.click(); });
   fileInput.addEventListener("change", e => pick(e.target.files[0]));
-  ["dragover","dragenter"].forEach(e => uploader.addEventListener(e, ev => { ev.preventDefault(); uploader.classList.add("over"); }));
-  ["dragleave","drop"].forEach(e => uploader.addEventListener(e, ev => { ev.preventDefault(); uploader.classList.remove("over"); }));
+  ["dragover","dragenter"].forEach(ev => uploader.addEventListener(ev, e => { e.preventDefault(); uploader.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev  => uploader.addEventListener(ev, e => { e.preventDefault(); uploader.classList.remove("over"); }));
   uploader.addEventListener("drop", e => pick(e.dataTransfer.files[0]));
-  fileRemove.addEventListener("click", e => { e.preventDefault(); reset(); });
-  $("chooseBtn").addEventListener("click", e => { e.preventDefault(); fileInput.click(); });
+  fileRemove.addEventListener("click", e => { e.preventDefault(); resetUpload(); });
 
   function pick(f) {
     if (!f) return;
     const ext = f.name.split(".").pop().toLowerCase();
-    if (!["pdf","csv"].includes(ext)) { setStatus("Please choose a PDF or CSV bank statement.", true); return; }
-    currentFile = f; cachedB64 = null;
-    fileTag.textContent = ext.toUpperCase();
-    fileName.textContent = f.name;
+    if (!["pdf","csv"].includes(ext)) { setStatus("Please upload a PDF or CSV bank statement.", true); return; }
+    file = f; cachedB64 = null;
+    fileBadge.textContent = ext.toUpperCase();
+    fileName.textContent  = f.name;
     fileBar.classList.add("show");
-    dropLabel.textContent = "Change statement";
     submitBtn.disabled = false;
-    setStatus(""); results.classList.remove("show");
+    setStatus("");
   }
 
-  function reset() {
-    currentFile = null; cachedB64 = null; fileInput.value = "";
+  function resetUpload() {
+    file = null; cachedB64 = null; fileInput.value = "";
     fileBar.classList.remove("show");
-    dropLabel.textContent = "Upload your statement";
     submitBtn.disabled = true;
-    setStatus(""); results.classList.remove("show");
+    setStatus("");
   }
 
   function setStatus(msg, isErr, busy) {
@@ -419,65 +567,58 @@
     statusEl.className = "status" + (isErr ? " error" : "");
   }
 
-  const readText = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsText(f); });
-  const readB64  = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(f); });
+  const readText = f => new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsText(f); });
+  const readB64  = f => new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(",")[1]); r.onerror=rej; r.readAsDataURL(f); });
 
-  submitBtn.addEventListener("click", () => run());
+  submitBtn.addEventListener("click", () => runParse());
 
-  async function run(password) {
-    if (!currentFile) return;
+  async function runParse(password) {
+    if (!file) return;
     submitBtn.disabled = true;
-    const isPdf = currentFile.name.toLowerCase().endsWith(".pdf");
-    setStatus("Analysing your statement…", false, true);
-
+    setStatus("Reading your statement…", false, true);
     try {
-      const payload = { fileName: currentFile.name };
+      const isPdf = file.name.toLowerCase().endsWith(".pdf");
+      const payload = { fileName: file.name };
       if (isPdf) {
-        cachedB64 = cachedB64 || await readB64(currentFile);
+        cachedB64 = cachedB64 || await readB64(file);
         payload.fileType = "pdf";
-        payload.content = cachedB64;
+        payload.content  = cachedB64;
         if (password) payload.password = password;
       } else {
         payload.fileType = "csv";
-        payload.content = await readText(currentFile);
+        payload.content  = await readText(file);
       }
-      await send(payload);
+      const resp = await fetch("/api/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (resp.status === 401 && data.needsPassword) {
+        submitBtn.disabled = false;
+        setStatus("");
+        openModal(data.wrongPassword);
+        return;
+      }
+      if (!resp.ok) throw new Error(data.error || "Couldn't read this statement.");
+      parserResult = data.result;
+      setStatus("");
+      submitBtn.disabled = false;
+      showProfile();
     } catch (err) {
       setStatus(err.message || "Something went wrong. Please try again.", true);
       submitBtn.disabled = false;
     }
   }
 
-  async function send(payload) {
-    const resp = await fetch("/api/parse", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const data = await resp.json();
-
-    if (resp.status === 401 && data.needsPassword) {
-      submitBtn.disabled = false;
-      setStatus("");
-      openModal(data.wrongPassword);
-      return;
-    }
-    if (!resp.ok) throw new Error(data.error || "Couldn't read this statement.");
-
-    render(data.result);
-    setStatus("");
-    submitBtn.disabled = false;
-  }
-
-  // Modal
+  // ── Modal ──
   function openModal(wrong) {
-    modalWarn.textContent = wrong ? "That password didn't match. Please try again." : "";
+    modalWarn.textContent = wrong ? "That password didn't match. Try again." : "";
     modalPw.value = "";
     overlay.classList.add("show");
     setTimeout(() => modalPw.focus(), 60);
   }
   function closeModal() { overlay.classList.remove("show"); }
-
   $("modalCancel").addEventListener("click", () => { closeModal(); setStatus(""); });
   overlay.addEventListener("click", e => { if (e.target === overlay) closeModal(); });
   modalPw.addEventListener("keydown", e => { if (e.key === "Enter") $("modalUnlock").click(); });
@@ -486,72 +627,227 @@
     if (!pw) { modalWarn.textContent = "Please enter the password."; return; }
     closeModal();
     setStatus("Unlocking statement…", false, true);
-    try { await send({ fileName: currentFile.name, fileType: "pdf", content: cachedB64, password: pw }); }
+    try { await runParse(pw); }
     catch (err) { setStatus(err.message, true); submitBtn.disabled = false; }
   });
 
-  // Render results
-  function render(d) {
+  // ── Step 2: Show Profile ──
+  function showProfile() {
+    const d = parserResult;
     const inc = d.income || {};
     const ccy = inc.currency || "";
 
-    // Income card
-    const badge = $("rBadge");
-    if (d.salary_detected) {
-      $("rIncome").textContent = inc.typical_day_of_month ? "Around the " + ord(inc.typical_day_of_month) : cap(inc.frequency) || "Detected";
-      $("rIncomeNote").textContent = [cap(inc.frequency), inc.average_amount ? ccy + " " + fmt(inc.average_amount) + " avg" : ""].filter(Boolean).join(" · ");
-      badge.style.display = "inline-block"; badge.className = "badge good";
-      badge.textContent = "Regular income found";
-    } else {
-      $("rIncome").textContent = "No regular salary";
-      $("rIncomeNote").textContent = "Income appears " + human(d.income_type) + ". Recommend verifying manually.";
-      badge.style.display = "inline-block"; badge.className = "badge warn";
-      badge.textContent = "Verify income manually";
+    // Income
+    confirmedIncome = inc.average_amount || 0;
+    $("pIncome").textContent    = confirmedIncome ? fmt(ccy, confirmedIncome) : "Not detected";
+    $("pIncomeSource").textContent = d.primary_income_source || d.bank || "—";
+    $("incomeOverride").placeholder = confirmedIncome ? confirmedIncome : "Enter monthly income";
+
+    if (!d.salary_detected || !confirmedIncome) {
+      $("noSalaryNotice").classList.remove("hidden");
     }
 
-    // Debit card
-    const rec = d.recommended_debit_date || {};
-    $("rDebit").textContent = rec.day_of_month ? "The " + ord(rec.day_of_month) : "Not enough data";
-    $("rDebitNote").textContent = rec.reason || "Income is too irregular to recommend a specific date.";
-
-    // Summary
-    $("sBank").textContent = d.bank || "—";
-    $("sHolder").textContent = d.account_holder || "—";
-    const p = d.statement_period || {};
-    $("sPeriod").textContent = (p.from && p.to) ? p.from + " → " + p.to : "—";
-    $("sSource").textContent = d.primary_income_source || "—";
-    $("sType").textContent = human(d.income_type);
-    $("sFreq").textContent = cap(inc.frequency) || "—";
-    $("sAvg").textContent = inc.average_amount ? ccy + " " + fmt(inc.average_amount) : "—";
-    $("sAfford").textContent = d.affordability_note || "—";
+    // Payday
+    const day = inc.typical_day_of_month;
+    $("pPayday").textContent = day ? "Around the " + ord(day) : "Irregular";
+    $("pFreq").textContent   = cap(inc.frequency) || "—";
 
     // Debit orders
-    const orders = d.debit_orders || [];
+    const orders  = d.debit_orders || [];
+    const active  = orders.filter(o => o.status !== "bounced");
+    const totalD  = active.reduce((s, o) => s + (o.amount || 0), 0);
+
+    $("pDebits").textContent   = fmt(ccy, totalD);
+    $("pAvailable").textContent = fmt(ccy, Math.max(0, confirmedIncome - totalD));
+
     if (orders.length > 0) {
-      $("debitSection").style.display = "block";
-      $("debitList").innerHTML = orders.map(o => {
-        const statusColor = o.status === "bounced" ? "color:var(--amber)" : "";
-        const dateStr = o.typical_date ? "day " + o.typical_date : "date varies";
-        return `<div class="row">
-          <span class="row-key">${o.description || "Unknown"}<br><small style="font-size:11px">${dateStr}</small></span>
-          <span class="row-val" style="${statusColor}">
-            ${ccy} ${fmt(o.amount)}
-            ${o.status === "bounced" ? '<br><small style="font-size:11px;font-weight:400">bounced</small>' : ""}
-          </span>
-        </div>`;
-      }).join("");
-    } else {
-      $("debitSection").style.display = "none";
+      $("debitSection").classList.remove("hidden");
+      $("debitBody").innerHTML = orders.map(o => `
+        <tr>
+          <td>${o.description || "Unknown"}</td>
+          <td>${o.typical_date ? o.typical_date + "th" : "—"}</td>
+          <td style="text-align:right;font-weight:600">${fmt(ccy, o.amount)}</td>
+          <td><span class="tag ${o.status === 'bounced' ? 'tag-bounced' : 'tag-active'}">${o.status || 'active'}</span></td>
+        </tr>`).join("");
+      $("debitTotal").textContent = fmt(ccy, totalD);
     }
 
-    results.classList.add("show");
-    results.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    // Show step 2, hide step 1
+    $("stepUpload").classList.add("hidden");
+    $("stepProfile").classList.remove("hidden");
+    stepDone(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function ord(n) { const s = ["th","st","nd","rd"], v = n % 100; return n + (s[(v-20)%10] || s[v] || s[0]); }
-  function cap(s) { return s ? s[0].toUpperCase() + s.slice(1) : ""; }
-  function human(s) { return (s || "unknown").replace(/_/g, " "); }
-  function fmt(n) { return Number(n).toLocaleString(); }
+  function applyIncomeOverride() {
+    const val = parseFloat($("incomeOverride").value);
+    if (!val || val <= 0) return;
+    confirmedIncome = val;
+    const ccy = parserResult?.income?.currency || "";
+    const orders = parserResult?.debit_orders || [];
+    const active = orders.filter(o => o.status !== "bounced");
+    const totalD = active.reduce((s, o) => s + (o.amount || 0), 0);
+    $("pIncome").textContent    = fmt(ccy, confirmedIncome);
+    $("pAvailable").textContent = fmt(ccy, Math.max(0, confirmedIncome - totalD));
+    $("noSalaryNotice").classList.add("hidden");
+  }
+
+  // ── Step 3: Qualification calculation ──
+  function calculateQualification() {
+    const d         = parserResult;
+    const inc       = d.income || {};
+    const ccy       = inc.currency || "";
+    const income    = confirmedIncome;
+    const loanAmt   = parseFloat($("loanAmount").value) || 0;
+    const term      = parseInt($("loanTerm").value);
+    const annualRate = parseFloat($("interestRate").value) / 100;
+    const monthlyRate = annualRate / 12;
+    const loanType  = $("loanType").value;
+
+    const orders = d.debit_orders || [];
+    const active = orders.filter(o => o.status !== "bounced");
+    const totalDebits = active.reduce((s, o) => s + (o.amount || 0), 0);
+
+    if (!income || income <= 0) {
+      alert("Please confirm your monthly income before calculating.");
+      $("incomeOverride").focus();
+      return;
+    }
+
+    // Max affordable monthly payment = 40% of income minus existing debits
+    const maxPayment = Math.max(0, (income * 0.40) - totalDebits);
+
+    // Max loan (present value of annuity)
+    let maxLoan;
+    if (monthlyRate > 0) {
+      maxLoan = maxPayment * ((1 - Math.pow(1 + monthlyRate, -term)) / monthlyRate);
+    } else {
+      maxLoan = maxPayment * term;
+    }
+    maxLoan = Math.floor(maxLoan / 100) * 100; // round down to nearest 100
+
+    // Loan amount to assess (requested or max)
+    const assessAmount = loanAmt > 0 ? loanAmt : maxLoan;
+
+    // Monthly payment for assessed amount
+    let monthlyPayment;
+    if (monthlyRate > 0) {
+      monthlyPayment = assessAmount * monthlyRate * Math.pow(1 + monthlyRate, term) / (Math.pow(1 + monthlyRate, term) - 1);
+    } else {
+      monthlyPayment = assessAmount / term;
+    }
+
+    const totalDTI = (monthlyPayment + totalDebits) / income;
+    const qualifies = assessAmount <= maxLoan && maxLoan > 0 && totalDTI <= 0.43;
+
+    // Risk score (0-100)
+    let risk = 0;
+    if (totalDTI > 0.43) risk += 40;
+    else if (totalDTI > 0.35) risk += 25;
+    else if (totalDTI > 0.25) risk += 12;
+    if (!d.salary_detected) risk += 20;
+    if (orders.some(o => o.status === "bounced")) risk += 20;
+    if (income < 3000) risk += 10;
+    risk = Math.min(100, risk);
+
+    const debitDate = d.recommended_debit_date?.day_of_month;
+    const debitStr  = debitDate ? "The " + ord(debitDate) + " of each month" : "Based on your payday";
+
+    // Render result hero
+    const hero = $("resultHero");
+    if (qualifies) {
+      hero.className = "result-hero approved";
+      $("rVerdict").textContent = loanAmt > 0 && loanAmt <= maxLoan
+        ? "✅ Your requested loan is approved"
+        : "✅ Based on your statement, you qualify for up to";
+      $("rAmount").innerHTML = `<span>${fmt(ccy, loanAmt > 0 ? assessAmount : maxLoan)}</span>`;
+      $("rSub").textContent  = `Repayable over ${term} months · ${monthlyRate > 0 ? (annualRate*100).toFixed(0)+"% p.a." : "0% interest"}`;
+    } else {
+      hero.className = "result-hero declined";
+      if (maxLoan <= 0) {
+        $("rVerdict").textContent = "❌ Unable to qualify at this time";
+        $("rAmount").textContent  = "Not qualified";
+        $("rSub").textContent     = "Your income after commitments is too low. Please reduce existing debts first.";
+      } else if (loanAmt > maxLoan) {
+        $("rVerdict").textContent = "⚠️ Requested amount is too high, but you qualify for";
+        $("rAmount").innerHTML    = `<span>${fmt(ccy, maxLoan)}</span>`;
+        $("rSub").textContent     = `Consider requesting ${fmt(ccy, maxLoan)} instead over ${term} months`;
+      } else {
+        $("rVerdict").textContent = "❌ Debt-to-income ratio too high";
+        $("rAmount").textContent  = "Not qualified";
+        $("rSub").textContent     = "Your current debit orders leave too little room for a new loan.";
+      }
+    }
+
+    // Breakdown
+    $("bIncome").textContent   = fmt(ccy, income);
+    $("bDebits").textContent   = fmt(ccy, totalDebits);
+    $("bAvail").textContent    = fmt(ccy, Math.max(0, income - totalDebits));
+    $("bPayment").textContent  = qualifies || loanAmt > 0 ? fmt(ccy, monthlyPayment) + "/month" : "—";
+    $("bDebitDate").textContent = debitStr;
+    $("bDTI").textContent      = (totalDTI * 100).toFixed(0) + "% (max 43%)";
+    $("bRiskLabel").textContent = risk < 30 ? "Low" : risk < 60 ? "Medium" : "High";
+    $("riskBar").style.width   = risk + "%";
+    $("riskBar").style.background = risk < 30 ? "#38a169" : risk < 60 ? "#ed8936" : "#e53e3e";
+    $("bAfford").textContent   = d.affordability_note || "";
+
+    // Documents
+    const docs = [
+      "National ID / Omang",
+      "Bank statements for the last 3 months",
+      "Payslip or proof of income",
+      "Completed loan application form",
+    ];
+    if (loanType === "Business Loan") docs.push("Business registration certificate");
+    if (loanType === "Home Loan") docs.push("Title deed / property valuation");
+    if (loanType === "Vehicle Loan") docs.push("Vehicle quotation");
+    $("docList").innerHTML = docs.map(d => `<li>${d}</li>`).join("");
+
+    // Show step 3
+    $("stepProfile").classList.add("hidden");
+    $("stepResult").classList.remove("hidden");
+    stepDone(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function restart() {
+    parserResult = null; confirmedIncome = 0; file = null; cachedB64 = null;
+    fileInput.value = "";
+    fileBar.classList.remove("show");
+    submitBtn.disabled = true;
+    setStatus("");
+    $("noSalaryNotice").classList.add("hidden");
+    $("debitSection").classList.add("hidden");
+    $("stepResult").classList.add("hidden");
+    $("stepProfile").classList.add("hidden");
+    $("stepUpload").classList.remove("hidden");
+    resetSteps();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ── Step indicator ──
+  function stepDone(n) {
+    for (let i = 1; i <= n; i++) {
+      $("sd" + i).className = "step-dot done";
+      $("sd" + i).textContent = "✓";
+      if ($("sl" + i)) $("sl" + i).classList.add("done");
+    }
+    const next = n + 1;
+    if ($("sd" + next)) $("sd" + next).className = "step-dot active";
+  }
+  function resetSteps() {
+    [1,2,3].forEach(i => { const d = $("sd"+i); d.className="step-dot"; d.textContent=i; });
+    [1,2].forEach(i => { const l = $("sl"+i); if(l) l.classList.remove("done"); });
+    $("sd1").className = "step-dot active";
+  }
+
+  // ── Helpers ──
+  function fmt(ccy, n) {
+    if (!n && n !== 0) return "—";
+    return (ccy ? ccy + " " : "") + Number(n).toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function ord(n) { const s=["th","st","nd","rd"], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+  function cap(s) { return s ? s[0].toUpperCase()+s.slice(1) : ""; }
 </script>
 </body>
 </html>
