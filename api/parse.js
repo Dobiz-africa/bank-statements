@@ -42,6 +42,18 @@ Return ONLY valid JSON (no markdown, no backticks, no commentary) in EXACTLY thi
     }
   ],
 
+  "monthly_expenses": {
+    "rent_bond": number or null,
+    "transport": number or null,
+    "food_groceries": number or null,
+    "debt_repayments": number or null,
+    "utilities": number or null,
+    "other": number or null,
+    "spending_breakdown": [
+      { "category": "string — e.g. Groceries, Alcohol, Takeaways", "monthly_amount": number }
+    ]
+  },
+
   "recommended_debit_date": {
     "day_of_month": number or null,
     "reason": "string — plain English explanation"
@@ -56,11 +68,23 @@ Rules:
 - PRIMARY INCOME: Look for any company or person that sends money R2,000+ at least TWICE in the statement period. That source IS the primary income, even if amounts vary month to month and even if the money gets transferred out shortly after. The fact that money comes in from the same source repeatedly = income.
 - If Ownisha Network, an employer, a company, or any single entity sends large amounts (R2,000+) 2 or more times → salary_detected=true, income_type="salary", set primary_income_source to that entity name.
 - Calculate average_amount from those recurring deposits only. Set typical_day_of_month to the most common day those deposits arrive.
-- IGNORE: small misc payments under R500 from many different people, internal transfers between the person's own accounts, refunds.
+- IGNORE for income: small misc payments under R500 from many different people, internal transfers between the person's own accounts, refunds.
 - List ALL debit orders — DebiCheck, EFT, scheduled payments, card subscriptions. Mark bounced ones as "bounced".
 - Base recommended_debit_date on 1-2 days AFTER the typical income arrival day.
 - Use the statement's own currency.
-`;
+
+EXPENSE EXTRACTION RULES (critical for monthly_expenses):
+- The statement usually has a "Spending Summary" section with category totals for the whole statement period.
+- Divide each category total by the number of months in the statement period to get the monthly average.
+- Map the categories to the form fields as follows:
+  * rent_bond → any "Rent", "Bond", "Home" category. If not found, set null.
+  * transport → "Fuel", "Transport", "Public Transport", "Uber", "Taxi" categories combined.
+  * food_groceries → "Groceries", "Food", "Supermarket" categories combined.
+  * debt_repayments → "Loan Payments" + "Funeral Cover" + "Life Insurance" + sum of all ACTIVE debit orders monthly amount.
+  * utilities → "Internet", "Telephone", "Electricity", "Water", "Utilities", "Cellphone" categories combined.
+  * other → everything else that doesn't fit above (Alcohol, Takeaways, Clothing, Personal Care, etc.) combined.
+- spending_breakdown: list EVERY spending category found with its monthly average amount, so the reviewer can see the full picture.
+- If no Spending Summary section exists, estimate from transaction history categories.`;
 
 async function callMistral(messages) {
   const res = await fetch("https://api.mistral.ai/v1/chat/completions", {
