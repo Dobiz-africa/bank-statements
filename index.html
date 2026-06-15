@@ -319,7 +319,7 @@
   <div id="stepUpload">
     <div class="card">
       <div class="card-title">📂 Upload Your Bank Statement</div>
-      <label class="uploader" id="uploader">
+      <div class="uploader" id="uploader">
         <div class="up-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -330,8 +330,8 @@
         <div class="up-title" id="upTitle">Upload your statement</div>
         <div class="up-sub">PDF or CSV · Any bank · Up to 15MB</div>
         <span class="up-btn" id="upBtn">Choose file</span>
-        <input type="file" id="fileInput" accept=".csv,.pdf"/>
-      </label>
+        <input type="file" id="fileInput" accept=".csv,.pdf" style="display:none"/>
+      </div>
       <div class="file-bar" id="fileBar">
         <span class="file-badge" id="fileBadge">PDF</span>
         <span class="file-name" id="fileName"></span>
@@ -536,7 +536,7 @@
   const overlay = $("overlay"), modalPw = $("modalPw"), modalWarn = $("modalWarn");
 
   // ── Upload interactions ──
-  $("upBtn").addEventListener("click", e => { e.preventDefault(); fileInput.click(); });
+  $("upBtn").addEventListener("click", () => fileInput.click());
   fileInput.addEventListener("change", e => pick(e.target.files[0]));
   ["dragover","dragenter"].forEach(ev => uploader.addEventListener(ev, e => { e.preventDefault(); uploader.classList.add("over"); }));
   ["dragleave","drop"].forEach(ev  => uploader.addEventListener(ev, e => { e.preventDefault(); uploader.classList.remove("over"); }));
