@@ -211,6 +211,11 @@ footer{text-align:center;padding:1.25rem;font-size:.72rem;color:var(--muted);bor
       <label>Pay Date <span id="paySrc"></span></label>
       <input type="text" id="payDate" placeholder="e.g. Around the 25th" readonly style="background:var(--bg)"/>
     </div>
+    <div class="fg">
+      <label>Best Debit Collection Day <span id="debitDaySrc"></span></label>
+      <input type="text" id="debitDay" placeholder="Calculated from statement" readonly style="background:var(--bg)"/>
+      <span class="hint" id="debitDayHint"></span>
+    </div>
   </div>
 
   <!-- expenses -->
@@ -301,6 +306,7 @@ footer{text-align:center;padding:1.25rem;font-size:.72rem;color:var(--muted);bor
       <div class="sm-item"><div class="sm-label">Account Number</div><div class="sm-val" id="rAcct">—</div></div>
       <div class="sm-item"><div class="sm-label">Bank</div><div class="sm-val" id="rBank">—</div></div>
       <div class="sm-item"><div class="sm-label">Statement Provided</div><div class="sm-val" id="rStmt">—</div></div>
+      <div class="sm-item"><div class="sm-label">Best Debit Collection Day</div><div class="sm-val" id="rDebitDay" style="color:var(--ok)">—</div></div>
     </div>
   </div>
 
@@ -446,6 +452,14 @@ function autofill() {
     tag('paySrc');
   }
 
+  // recommended debit date
+  const rec = d.recommended_debit_date || {};
+  if (rec.day_of_month) {
+    $('debitDay').value = 'The ' + ord(rec.day_of_month) + ' of each month';
+    $('debitDayHint').textContent = rec.reason || '';
+    tag('debitDaySrc');
+  }
+
   // debt repayments from active debit orders
   const orders = d.debit_orders || [];
   const active = orders.filter(o => o.status !== 'bounced');
@@ -575,6 +589,7 @@ function qualify() {
   $('rAcct').textContent = $('accountNo').value || '—';
   $('rBank').textContent = $('bankName').value || '—';
   $('rStmt').textContent = $('stmtProvided').value;
+  $('rDebitDay').textContent = $('debitDay').value || '—';
 
   // debit orders
   if (parsed) {
@@ -604,8 +619,8 @@ function resetAll() {
   $('fileRow').classList.remove('show');
   $('uploadBtn').disabled = true;
   setUpStatus('');
-  ['clientName','accountNo','bankName','monthlyIncome','payDate'].forEach(id => $( id).value = '');
-  ['nameSrc','accSrc','bankSrc','incSrc','paySrc','debtSrc'].forEach(id => $( id).innerHTML = '');
+  ['clientName','accountNo','bankName','monthlyIncome','payDate','debitDay'].forEach(id => $( id).value = '');
+  ['nameSrc','accSrc','bankSrc','incSrc','paySrc','debtSrc','debitDaySrc'].forEach(id => $( id).innerHTML = '');
   expFields.forEach(id => $( id).value = '0');
   $('stmtProvided').value = 'Yes';
   $('stmtNotes').textContent = '';
